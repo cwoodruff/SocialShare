@@ -77,8 +77,8 @@ az webapp config appsettings set --name $APP --resource-group $RG --settings \
   Storage__ImageRoot="/home/data/uploads" \
   DataProtection__KeyRingPath="/home/data/keys" \
   App__PublicBaseUrl="https://$APP.azurewebsites.net" \
-  App__RegistrationEnabled=true \
-  App__RequireConfirmedAccount=false \
+  App__RegistrationEnabled=false \
+  App__RequireConfirmedAccount=true \
   App__AdminEmails__0="you@example.com" \
   Scheduler__Enabled=true \
   Scheduler__PollSeconds=15
@@ -96,6 +96,17 @@ Three of those matter more than the rest:
   an upload. If this is wrong or empty, image posts to those two fail.
 - **`ConnectionStrings__Default`.** It must be under `/home`. The container filesystem is reset
   on every deployment.
+
+Sign ups ship closed and email confirmation ships required, which is why
+`App__RegistrationEnabled` is `false` above. That also means a brand new deployment has nobody in
+it and no way to sign up, so see
+[creating the first account](operations.md#creating-the-first-account) before you go looking for
+a sign up link that is not there.
+
+With confirmation required, an account cannot sign in until it clicks the link in its
+confirmation email. With `Email__Provider` left at `Log` that link only exists in the application
+log, which is workable for one person but is the reason to configure a real provider if anyone
+else is ever going to use this.
 
 If you want real email:
 

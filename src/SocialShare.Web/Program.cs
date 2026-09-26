@@ -43,7 +43,20 @@ var keyRing = builder.Configuration["DataProtection:KeyRingPath"];
 var dataProtection = builder.Services.AddDataProtection().SetApplicationName("SocialShare");
 if (!string.IsNullOrWhiteSpace(keyRing))
 {
-    Directory.CreateDirectory(keyRing);
+    try
+    {
+        Directory.CreateDirectory(keyRing);
+    }
+    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+    {
+        // Failing here means every stored token would be re-encrypted with a throwaway key on
+        // each restart, so say what is wrong rather than dying on a raw IOException.
+        throw new InvalidOperationException(
+            $"DataProtection:KeyRingPath is set to '{keyRing}' and that directory could not be created. "
+            + "On Azure App Service it should be under /home. Locally, point it somewhere writable or leave it empty.",
+            ex);
+    }
+
     dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keyRing));
 }
 
@@ -54,6 +67,7 @@ builder.Services.AddScoped<ImageService>();
 builder.Services.AddScoped<PublishingService>();
 builder.Services.AddScoped<AccountConnectionService>();
 builder.Services.AddScoped<OAuthStateStore>();
+builder.Services.AddScoped<ConfirmationEmail>();
 
 // htmx posts from buttons that are not inside a form, so the token travels in a header that
 // the layout puts on the body element once per page.

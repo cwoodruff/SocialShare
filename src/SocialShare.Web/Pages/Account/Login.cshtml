@@ -14,6 +14,13 @@
 
     <partial name="_ValidationSummary" model="ModelState" />
 
+    @if (Model.NeedsConfirmation)
+    {
+        <p class="notice notice--info">
+            Lost the email? <a href="/resend-confirmation">Send the confirmation link again</a>.
+        </p>
+    }
+
     <form method="post" class="stack-sm">
         <div class="field">
             <label for="Email">Email</label>

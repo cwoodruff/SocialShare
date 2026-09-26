@@ -1,12 +1,15 @@
 @using Microsoft.AspNetCore.Antiforgery
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Options
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IAntiforgery Antiforgery
+@inject IOptions<AppOptions> AppSettings
 @{
     var signedIn = SignInManager.IsSignedIn(User);
     var isAdmin = signedIn && User.IsInRole("Admin");
     var title = ViewData["Title"] as string;
     var antiforgeryToken = Antiforgery.GetAndStoreTokens(ViewContext.HttpContext).RequestToken;
+    var registrationEnabled = AppSettings.Value.RegistrationEnabled;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -50,7 +53,10 @@
                 else
                 {
                     <a href="/login" aria-current="@Current("/login")">Sign in</a>
-                    <a class="btn btn--primary btn--small" href="/register">Create account</a>
+                    @if (registrationEnabled)
+                    {
+                        <a class="btn btn--primary btn--small" href="/register">Create account</a>
+                    }
                 }
             </nav>
         </div>

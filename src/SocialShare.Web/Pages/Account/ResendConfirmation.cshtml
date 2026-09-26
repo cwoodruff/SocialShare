@@ -1,0 +1,40 @@
+@page "/resend-confirmation"
+@model SocialShare.Web.Pages.Account.ResendConfirmationModel
+@{
+    ViewData["Title"] = "Resend the confirmation link";
+}
+
+<div class="auth card stack">
+    <h1>Resend the confirmation link</h1>
+
+    @if (Model.Sent)
+    {
+        <p class="notice notice--success">
+            If that email belongs to an account that has not been confirmed yet, a new link is on
+            its way. The link replaces any earlier one.
+        </p>
+        <p class="small muted">
+            No email arriving? In development nothing is actually sent, the link is written to the
+            server log instead, so look in the console window running the app.
+        </p>
+        <p class="small"><a href="/login">Back to sign in</a></p>
+    }
+    else
+    {
+        <partial name="_ValidationSummary" model="ModelState" />
+
+        <p class="muted small">
+            Enter the email you signed up with and I will send the confirmation link again.
+        </p>
+
+        <form method="post" class="stack-sm">
+            <div class="field">
+                <label for="Email">Email</label>
+                <input id="Email" name="Email" type="email" value="@Model.Email" autocomplete="email" required />
+            </div>
+            <button type="submit" class="btn btn--primary btn--block">Send it again</button>
+        </form>
+
+        <p class="small muted"><a href="/login">Back to sign in</a></p>
+    }
+</div>

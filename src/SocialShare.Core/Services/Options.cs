@@ -48,10 +48,17 @@ public sealed class AppOptions
     /// <summary>Absolute base URL, needed because two platforms fetch images by URL themselves.</summary>
     public string? PublicBaseUrl { get; set; }
 
-    /// <summary>Flip to require a confirmed email before sign in.</summary>
-    public bool RequireConfirmedAccount { get; set; }
+    /// <summary>
+    /// Require a confirmed email address before an account can sign in. On means a new account
+    /// has to click the link in its confirmation email first.
+    /// </summary>
+    public bool RequireConfirmedAccount { get; set; } = true;
 
-    public bool RegistrationEnabled { get; set; } = true;
+    /// <summary>
+    /// Whether anybody can create an account. Off closes sign ups entirely, which also means
+    /// the first account has to be created before this is turned off. See docs/operations.md.
+    /// </summary>
+    public bool RegistrationEnabled { get; set; }
 
     /// <summary>Where the docs folder is published, so the UI can link straight at it.</summary>
     public string DocsBaseUrl { get; set; } = "https://github.com/cwoodruff/SocialShare/blob/main/docs";

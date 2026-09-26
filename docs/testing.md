@@ -4,7 +4,7 @@
 dotnet test
 ```
 
-72 tests, about five seconds. No database server, no network, no fixtures to install.
+77 tests, about five seconds. No database server, no network, no fixtures to install.
 
 ## What is covered
 
@@ -17,6 +17,7 @@ dotnet test
 | The scheduler | `SchedulerBackgroundServiceTests.cs` | 5 |
 | The atomic claim on SQLite | `SchedulerClaimTests.cs` | 2 |
 | Tenant isolation, end to end | `TenantIsolationTests.cs` | 2 |
+| Registration and email confirmation gates | `AccountGateTests.cs` | 5 |
 
 ## How the platforms are tested
 
@@ -88,6 +89,22 @@ Then it proves that user B:
 - and gets bounced from `/admin`.
 
 A second test walks every authenticated route signed out and asserts a redirect to sign in.
+
+## How the sign up gates are tested
+
+`AccountGateTests` uses the same real host, with `App:RegistrationEnabled` and
+`App:RequireConfirmedAccount` set per test rather than inherited, because both ship on and a
+configuration flag that is read in the wrong place fails silently.
+
+It proves that with registration closed the page says so, a form post straight at the handler
+still creates nothing, and no page offers a sign up link. It proves that an unconfirmed account
+registers but cannot sign in, is told why, is pointed at the resend page, and is still shut out
+of `/app`. It proves that confirming the email lets that same account straight in.
+
+The last one is the one I would not have thought to write: the resend page has to answer
+identically whether or not the address belongs to an account, otherwise it is an account
+enumeration oracle. The test compares the two whole rendered pages with the per request
+antiforgery tokens stripped out, so any future divergence fails rather than quietly leaking.
 
 This is the test that has to keep passing if this ever becomes a product, so it goes through real
 HTTP rather than calling page models directly. A page model test would pass even if the

@@ -17,6 +17,9 @@ namespace SocialShare.Tests.Support;
 /// </summary>
 public sealed class SocialShareAppFactory : WebApplicationFactory<Program>
 {
+    /// <summary>Overrides applied after the defaults, so a test can open or close the gate.</summary>
+    public Dictionary<string, string> Settings { get; } = [];
+
     private readonly string _databasePath = Path.Combine(Path.GetTempPath(), $"socialshare-test-{Guid.NewGuid():N}.db");
     private readonly string _keyRingPath = Path.Combine(Path.GetTempPath(), $"socialshare-keys-{Guid.NewGuid():N}");
 
@@ -28,7 +31,15 @@ public sealed class SocialShareAppFactory : WebApplicationFactory<Program>
         builder.UseSetting("Scheduler:Enabled", "false");
         builder.UseSetting("DataProtection:KeyRingPath", _keyRingPath);
         builder.UseSetting("App:PublicBaseUrl", "http://localhost");
+        // These two tests are about tenant isolation, not the sign up gate, so the gate is
+        // opened here explicitly. AccountGateTests covers the shipped defaults instead.
+        builder.UseSetting("App:RegistrationEnabled", "true");
         builder.UseSetting("App:RequireConfirmedAccount", "false");
+
+        foreach (var (key, value) in Settings)
+        {
+            builder.UseSetting(key, value);
+        }
 
         builder.ConfigureServices(services =>
         {
@@ -45,6 +56,25 @@ public sealed class SocialShareAppFactory : WebApplicationFactory<Program>
         AllowAutoRedirect = false,
         HandleCookies = true
     });
+
+    /// <summary>Stands in for clicking the link in a confirmation email.</summary>
+    public async Task ConfirmEmailAsync(string email)
+    {
+        using var scope = Services.CreateScope();
+        var users = scope.ServiceProvider
+            .GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<SocialShare.Core.Domain.ApplicationUser>>();
+
+        var user = await users.FindByEmailAsync(email)
+                   ?? throw new InvalidOperationException($"No account for {email}.");
+
+        var token = await users.GenerateEmailConfirmationTokenAsync(user);
+        var result = await users.ConfirmEmailAsync(user, token);
+
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException(string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+    }
 
     public async Task<T> UseDatabaseAsync<T>(Func<SocialShareDbContext, Task<T>> work)
     {

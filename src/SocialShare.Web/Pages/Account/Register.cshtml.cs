@@ -1,14 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text;
-using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using SocialShare.Core.Data;
 using SocialShare.Core.Domain;
 using SocialShare.Core.Services;
+using SocialShare.Web.Infrastructure;
 
 namespace SocialShare.Web.Pages.Account;
 
@@ -16,7 +14,7 @@ public class RegisterModel(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
     SocialShareDbContext db,
-    IAppEmailSender email,
+    ConfirmationEmail confirmationEmail,
     IOptions<AppOptions> appOptions,
     ILogger<RegisterModel> logger) : PageModel
 {
@@ -103,16 +101,7 @@ public class RegisterModel(
 
         logger.LogInformation("Registered {Email}.", Input.Email);
 
-        var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        var encoded = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-        var link = Url.Page("/Account/ConfirmEmail", null,
-            new { userId = user.Id, code = encoded }, Request.Scheme)!;
-
-        await email.SendAsync(
-            Input.Email,
-            "Confirm your SocialShare account",
-            $"""<p>Confirm your account by <a href="{HtmlEncoder.Default.Encode(link)}">clicking here</a>.</p>""",
-            cancellationToken);
+        await confirmationEmail.SendAsync(user, this, cancellationToken);
 
         if (_app.RequireConfirmedAccount)
         {

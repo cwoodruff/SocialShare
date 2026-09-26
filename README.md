@@ -35,15 +35,28 @@ You need the .NET 10 SDK. Nothing else: no Node, no build step, no database serv
 4. Open the URL it prints, usually `https://localhost:7204`.
 5. Click Create account. The SQLite file and the uploads folder are created on first start under
    `src/SocialShare.Web/App_Data`.
-6. Go to Accounts and set up Bluesky. It only needs your handle and an app password, which you
+6. Confirm the email. Nothing is actually sent in development, so find the confirmation link in
+   the console window running the app and open it. Then sign in.
+7. Go to Accounts and set up Bluesky. It only needs your handle and an app password, which you
    create in Bluesky under Settings, Privacy and security, App passwords. Save, then Connect.
-7. Go to Posts, write a post, tick Publish to Bluesky, and press Publish now.
+8. Go to Posts, write a post, tick Publish to Bluesky, and press Publish now.
 
 Every other platform needs a developer app you register yourself.
 [docs/platform-setup.md](docs/platform-setup.md) walks through all six.
 
 Email is not sent in development. Confirmation and password reset links are written to the
-console instead, so look in the window running the app.
+console instead, so look in the window running the app. If you lose one,
+`/resend-confirmation` sends another.
+
+### Sign ups are closed by default
+
+`App:RegistrationEnabled` ships as `false` and `App:RequireConfirmedAccount` ships as `true`, so
+a deployed instance is shut to strangers out of the box. Development overrides registration back
+on in `appsettings.Development.json`, which is why step 5 works on a fresh clone.
+
+That means a new deployment has nobody in it and no way to sign up. Open registration long
+enough to create your own account, then close it again. The sequence is in
+[docs/operations.md](docs/operations.md#creating-the-first-account).
 
 ## Running the tests
 
@@ -51,7 +64,7 @@ console instead, so look in the window running the app.
 dotnet test
 ```
 
-That runs everything, including an integration test that boots the real app against a throwaway
+That runs everything, including integration tests that boot the real app against a throwaway
 SQLite file. [docs/testing.md](docs/testing.md) says what is covered.
 
 ## Configuration worth knowing
@@ -65,8 +78,8 @@ Everything has a working default. These are the ones I actually change.
 | `Storage:MaxImageBytes` | `8388608` | Upload size cap. |
 | `DataProtection:KeyRingPath` | empty | Where the encryption key ring is persisted. Must be set in Azure. |
 | `App:PublicBaseUrl` | empty | Absolute base URL. Threads and Instagram fetch images from it. |
-| `App:RequireConfirmedAccount` | `false` | Turn on to require a confirmed email before sign in. |
-| `App:RegistrationEnabled` | `true` | Turn off to close sign ups. |
+| `App:RequireConfirmedAccount` | `true` | An account must confirm its email before it can sign in. |
+| `App:RegistrationEnabled` | `false` | Whether anybody can create an account. Development overrides this to `true`. |
 | `App:AdminEmails` | `[]` | Emails that get the admin role on the next start. |
 | `Scheduler:PollSeconds` | `15` | How often the worker looks for due posts. |
 | `Retention:PurgeEnabled` | `false` | Turn on to delete published posts after N days. |

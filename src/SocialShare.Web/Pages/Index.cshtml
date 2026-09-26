@@ -133,5 +133,14 @@
         <li>Instagram needs a Business or Creator account linked to a Facebook Page, and every Instagram post needs an image.</li>
         <li>Uploaded images are served from a public but unguessable URL, because Threads and Instagram fetch images rather than accept uploads.</li>
     </ul>
-    <p class="small"><a href="/register">Create an account</a> and the setup guide walks each of those through step by step.</p>
+    <p class="small">
+        @if (Model.RegistrationEnabled)
+        {
+            <a href="/register">Create an account</a><text> and the setup guide walks each of those through step by step.</text>
+        }
+        else
+        {
+            <text>Sign ups are closed on this instance. If you have an account, the setup guide walks each of those through step by step once you are signed in.</text>
+        }
+    </p>
 </section>

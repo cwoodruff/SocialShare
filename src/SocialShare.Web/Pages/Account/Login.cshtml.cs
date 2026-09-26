@@ -21,6 +21,9 @@ public class LoginModel(
     [TempData]
     public string? StatusMessage { get; set; }
 
+    /// <summary>Set when the sign in failed only because the email is unconfirmed.</summary>
+    public bool NeedsConfirmation { get; private set; }
+
     public class InputModel
     {
         [Required(ErrorMessage = "An email address is required.")]
@@ -62,8 +65,11 @@ public class LoginModel(
 
         if (result.IsNotAllowed)
         {
+            // Almost always an unconfirmed email. Say so, and say where the way out is, because
+            // the sign in page is where somebody stuck on this will end up.
+            NeedsConfirmation = true;
             ModelState.AddModelError(string.Empty,
-                "That account has not confirmed its email address yet. Check your inbox, or the server log in development.");
+                "That account has not confirmed its email address yet. Check your inbox for the link.");
             return Page();
         }
 

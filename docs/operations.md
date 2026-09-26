@@ -18,6 +18,58 @@ development goes to the user profile because `DataProtection:KeyRingPath` is emp
 All three matter. A backup of the database without the key ring gives you a database full of
 ciphertext you cannot decrypt.
 
+## Creating the first account
+
+Sign ups ship closed (`App:RegistrationEnabled` is `false`) and email confirmation ships required
+(`App:RequireConfirmedAccount` is `true`). A brand new deployment therefore has nobody in it and
+no sign up link anywhere, which is deliberate and is also a chicken and egg problem the first
+time.
+
+Open the door, walk through it, close it behind you.
+
+```bash
+RG=socialshare-rg
+APP=socialshare-woody
+
+# 1. Open sign ups. The app restarts, which takes a few seconds.
+az webapp config appsettings set --name $APP --resource-group $RG --settings \
+  App__RegistrationEnabled=true
+
+# 2. Go to https://$APP.azurewebsites.net/register and create your account.
+
+# 3. Find the confirmation link. With Email:Provider left at Log it is written to the
+#    application log rather than sent, so tail the log and look for "Confirm your SocialShare
+#    account". Open the link, then sign in.
+az webapp log tail --name $APP --resource-group $RG
+
+# 4. Close sign ups again.
+az webapp config appsettings set --name $APP --resource-group $RG --settings \
+  App__RegistrationEnabled=false
+
+# 5. Make yourself an admin, if you have not already.
+az webapp config appsettings set --name $APP --resource-group $RG --settings \
+  App__AdminEmails__0="you@example.com"
+```
+
+Do the same thing again, briefly, each time you want to let somebody else in. There is no invite
+system. That is a deliberate omission rather than an oversight: an invite flow is real work and
+this has one user.
+
+If you configure a real email provider, steps 2 and 3 collapse into "register and click the link
+in your inbox" and you never touch the log.
+
+### If you get locked out
+
+You confirmed nothing, registration is closed, and you cannot sign in. Two ways back:
+
+- **The resend page.** `/resend-confirmation` is reachable signed out and does not need
+  registration to be open. Enter your address and a fresh link goes out, or to the log.
+- **Confirm directly in the database.** Last resort, and it skips the check rather than passing
+  it:
+  ```sql
+  UPDATE AspNetUsers SET EmailConfirmed = 1 WHERE Email = 'you@example.com';
+  ```
+
 ## Backing up
 
 ### Manual, and good enough
