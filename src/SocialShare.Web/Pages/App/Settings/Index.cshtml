@@ -1,0 +1,96 @@
+@page "/app/settings"
+@model SocialShare.Web.Pages.App.Settings.IndexModel
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<div class="stack">
+    <h1>Settings</h1>
+
+    @if (Model.StatusMessage is not null)
+    {
+        <p class="notice notice--success">@Model.StatusMessage</p>
+    }
+
+    <partial name="_ValidationSummary" model="ModelState" />
+
+    <div class="card stack-sm">
+        <h2>Profile</h2>
+
+        <form method="post" asp-page-handler="Profile" class="stack-sm">
+            <div class="field">
+                <label for="DisplayName">Display name</label>
+                <input id="DisplayName" name="Profile.DisplayName" value="@Model.Profile.DisplayName" required maxlength="200" />
+            </div>
+
+            <div class="field">
+                <label for="TimeZoneId">Time zone</label>
+                <select id="TimeZoneId" name="Profile.TimeZoneId">
+                    @foreach (var zone in AppTimeZone.CommonZones)
+                    {
+                        <option value="@zone" selected="@(zone == Model.Profile.TimeZoneId)">@zone</option>
+                    }
+                </select>
+                <span class="field__help">
+                    Everything is stored in UTC. This is what scheduling and every date on screen are converted to.
+                </span>
+            </div>
+
+            <div class="field">
+                <label for="Email">Email</label>
+                <input id="Email" value="@Model.Email" disabled />
+                <span class="field__help">Changing the sign in email is not built yet.</span>
+            </div>
+
+            <button type="submit" class="btn btn--primary">Save profile</button>
+        </form>
+    </div>
+
+    <div class="card stack-sm">
+        <h2>Password</h2>
+
+        <form method="post" asp-page-handler="Password" class="stack-sm">
+            <div class="field">
+                <label for="Current">Current password</label>
+                <input id="Current" name="Password.Current" type="password" autocomplete="current-password" required />
+            </div>
+
+            <div class="field">
+                <label for="New">New password</label>
+                <input id="New" name="Password.New" type="password" autocomplete="new-password" required minlength="10" />
+            </div>
+
+            <div class="field">
+                <label for="Confirm">Confirm new password</label>
+                <input id="Confirm" name="Password.Confirm" type="password" autocomplete="new-password" required />
+            </div>
+
+            <button type="submit" class="btn btn--primary">Change password</button>
+        </form>
+    </div>
+
+    <div class="card stack-sm">
+        <h2>Organization</h2>
+        <p class="muted small" style="margin:0;">
+            Every account gets its own organization. Team features are not built yet, but the data
+            is already shaped for them.
+        </p>
+        <dl class="small" style="margin:0;">
+            <dt class="muted">Name</dt>
+            <dd style="margin:0 0 var(--space-3);">@Model.OrganizationName</dd>
+            <dt class="muted">Plan</dt>
+            <dd style="margin:0;">
+                <span class="badge badge--accent">@Model.Plan</span>
+                @if (Model.ScheduledPostLimit is { } limit)
+                {
+                    <span class="muted"> Up to @limit scheduled posts at a time.</span>
+                }
+                else
+                {
+                    <span class="muted"> No scheduling limit.</span>
+                }
+            </dd>
+        </dl>
+        <p class="tiny faint" style="margin:0;">There is no billing. The plan is a placeholder for later.</p>
+    </div>
+</div>

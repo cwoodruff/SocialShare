@@ -1,0 +1,79 @@
+@model SocialShare.Web.Pages.App.Posts.ComposeModel
+@{
+    var index = (int)(ViewData["SlotIndex"] ?? 0);
+    var panel = Model.Panels[index];
+    var error = ViewData["SlotError"] as string;
+    var image = panel.Image;
+    var ratio = image is { Height: > 0 } ? (double)image.Width / image.Height : (double?)null;
+    var offRatio = ratio is not null
+        && Math.Abs(ratio.Value - panel.Capabilities.RecommendedAspectRatio) > panel.Capabilities.AspectRatioTolerance;
+}
+
+<div id="slot-@index" class="image-slot stack-sm">
+    <input type="hidden" name="Targets[@index].ImageId" value="@panel.Input.ImageId" />
+
+    <div class="row row--between">
+        <strong class="small">Featured image</strong>
+        <span class="tiny muted">@panel.Capabilities.RecommendedImage</span>
+    </div>
+
+    @if (error is not null)
+    {
+        <p class="notice notice--error">@error</p>
+    }
+
+    @if (image is not null)
+    {
+        <img src="/i/@image.StorageKey" alt="Featured image for @panel.Capabilities.DisplayName" />
+        <p class="tiny muted" style="margin:0;">
+            @image.OriginalFileName, @image.Width by @image.Height, @(image.ByteSize / 1024) KB
+        </p>
+
+        @if (offRatio)
+        {
+            <p class="notice notice--warn">
+                That is @ratio!.Value.ToString("0.00") to 1 and @panel.Capabilities.DisplayName prefers around
+                @panel.Capabilities.RecommendedAspectRatio.ToString("0.00") to 1. It will still publish, it may just get cropped.
+            </p>
+        }
+
+        <div class="field" style="margin-bottom:0;">
+            <label for="alt-@index">Alt text</label>
+            <input id="alt-@index"
+                   name="Targets[@index].ImageAltText"
+                   value="@panel.Input.ImageAltText"
+                   maxlength="1000"
+                   placeholder="Describe the image for anyone using a screen reader." />
+        </div>
+
+        <button type="button"
+                class="btn btn--small btn--danger"
+                hx-post="?handler=RemoveImage&amp;index=@index"
+                hx-include="#compose-form"
+                hx-target="#slot-@index"
+                hx-swap="outerHTML">
+            Remove image
+        </button>
+    }
+    else
+    {
+        <div class="field" style="margin-bottom:0;">
+            <label for="file-@index">Upload a JPEG, PNG or WebP</label>
+            @* The file input posts on change so the image is stored and previewed without
+               saving the whole post. The preview before upload is the one bit of JavaScript. *@
+            <input id="file-@index"
+                   type="file"
+                   name="file"
+                   accept="image/jpeg,image/png,image/webp"
+                   data-preview="preview-@index"
+                   hx-post="?handler=UploadImage&amp;index=@index"
+                   hx-encoding="multipart/form-data"
+                   hx-include="#compose-form"
+                   hx-target="#slot-@index"
+                   hx-swap="outerHTML"
+                   hx-trigger="change" />
+            <span class="field__help">Up to 8 MB. The real file type is checked, not the extension.</span>
+        </div>
+        <div id="preview-@index"></div>
+    }
+</div>

@@ -1,0 +1,165 @@
+@model SocialShare.Web.Pages.App.Accounts.IndexModel
+@{
+    var card = ViewData["Card"] as SocialShare.Web.Pages.App.Accounts.IndexModel.Card ?? Model.Single!;
+    var caps = card.Capabilities;
+    var platform = caps.Platform;
+    var status = ViewData["CardStatus"] as string;
+    var error = (ViewData["CardError"] as string) ?? card.Account?.LastError;
+    var formId = $"creds-{platform}";
+}
+
+<div class="card stack-sm" id="account-@platform">
+    <div class="card__header">
+        <div>
+            <h2 style="display:flex;align-items:center;gap:.5rem;">
+                @caps.DisplayName
+                @if (card.IsConnected)
+                {
+                    <span class="badge badge--success">Connected</span>
+                }
+                else if (card.IsConfigured)
+                {
+                    <span class="badge badge--info">Ready to connect</span>
+                }
+                else
+                {
+                    <span class="badge">Not set up</span>
+                }
+                @if (caps.RequiresPaidTier)
+                {
+                    <span class="badge badge--warn">Paid tier needed</span>
+                }
+            </h2>
+            <p class="muted small" style="margin:0;">@caps.Summary</p>
+        </div>
+
+        @if (card.Account?.DisplayName is { Length: > 0 } handle)
+        {
+            <span class="small muted nowrap">@handle</span>
+        }
+    </div>
+
+    @if (status is not null)
+    {
+        <p class="notice notice--success">@status</p>
+    }
+    @if (error is not null)
+    {
+        <p class="notice notice--error">@error</p>
+    }
+
+    <form id="@formId"
+          method="post"
+          asp-page-handler="Save"
+          asp-route-platform="@platform"
+          hx-post="?handler=Save&amp;platform=@platform"
+          hx-target="#account-@platform"
+          hx-swap="outerHTML"
+          class="stack-sm">
+        @Html.AntiForgeryToken()
+
+        @foreach (var field in caps.CredentialFields)
+        {
+            var stored = card.Credentials.GetValueOrDefault(field.Key);
+            var inputId = $"{platform}-{field.Key}";
+            var type = field.Kind switch
+            {
+                CredentialFieldKind.Secret => "password",
+                CredentialFieldKind.Url => "url",
+                _ => "text"
+            };
+
+            <div class="field">
+                <label for="@inputId">
+                    @field.Label
+                    @if (!field.Required)
+                    {
+                        <span class="faint tiny">optional</span>
+                    }
+                </label>
+                <input id="@inputId"
+                       name="@field.Key"
+                       type="@type"
+                       value="@(field.Kind == CredentialFieldKind.Secret ? "" : stored ?? field.DefaultValue)"
+                       placeholder="@field.Placeholder"
+                       autocomplete="off"
+                       spellcheck="false" />
+                <span class="field__help">
+                    @field.Help
+                    @if (field.Kind == CredentialFieldKind.Secret && !string.IsNullOrEmpty(stored))
+                    {
+                        <strong> A value is already stored. Leave this blank to keep it.</strong>
+                    }
+                </span>
+            </div>
+        }
+
+        <div class="row">
+            <button type="submit" class="btn">Save</button>
+
+            <button type="submit"
+                    class="btn btn--primary"
+                    formaction="?handler=Connect&amp;platform=@platform"
+                    hx-post="?handler=Connect&amp;platform=@platform"
+                    hx-target="#account-@platform"
+                    hx-swap="outerHTML"
+                    disabled="@(!card.IsConfigured)">
+                @(card.IsConnected ? "Reconnect" : "Connect")
+            </button>
+
+            @if (card.IsConnected)
+            {
+                <button type="button"
+                        class="btn"
+                        hx-post="?handler=Test&amp;platform=@platform"
+                        hx-target="#account-@platform"
+                        hx-swap="outerHTML">
+                    Test connection
+                </button>
+
+                <button type="button"
+                        class="btn btn--danger"
+                        hx-get="?handler=Confirm&amp;platform=@platform&amp;action=Disconnect"
+                        hx-target="#account-@platform"
+                        hx-swap="outerHTML">
+                    Disconnect
+                </button>
+            }
+
+            <span class="spacer"></span>
+
+            @if (card.Account is not null)
+            {
+                <button type="button"
+                        class="btn btn--quiet btn--small"
+                        hx-get="?handler=Confirm&amp;platform=@platform&amp;action=Forget"
+                        hx-target="#account-@platform"
+                        hx-swap="outerHTML">
+                    Forget everything
+                </button>
+            }
+        </div>
+    </form>
+
+    <details>
+        <summary class="small muted" style="cursor:pointer;">What this platform expects</summary>
+        <ul class="small muted" style="margin-top:var(--space-2);">
+            <li>Character limit: @(card.Account?.CharacterLimitOverride ?? caps.DefaultCharacterLimit)</li>
+            <li>Images: @(caps.ImageRequired ? "required on every post" : caps.ImageSupported ? "optional" : "not supported")</li>
+            <li>Recommended image: @caps.RecommendedImage</li>
+            @if (caps.RequiresPublicImageUrl)
+            {
+                <li>Fetches images from a public URL rather than accepting an upload, so uploads here are served publicly at a random address.</li>
+            }
+            <li><a href="@Model.DocsUrl(caps.SetupDocAnchor)" rel="noopener">How to get these values for @caps.DisplayName</a></li>
+            @if (caps.AuthKind != PlatformAuthKind.DirectCredentials)
+            {
+                <li>Redirect URI to register with the platform: <code>@($"{Context.Request.Scheme}://{Context.Request.Host}/app/accounts/callback/{platform}")</code></li>
+            }
+            @if (card.Account?.LastTestedUtc is { } tested)
+            {
+                <li>Last tested @tested.ToString("yyyy-MM-dd HH:mm") UTC, @(card.Account.LastTestSucceeded == true ? "passed" : "failed").</li>
+            }
+        </ul>
+    </details>
+</div>

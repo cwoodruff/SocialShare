@@ -1,0 +1,85 @@
+@model SocialShare.Web.Pages.App.Posts.DetailsModel
+@{
+    var post = Model.Post;
+    var targets = post.Targets.OrderBy(t => (int)t.Platform).ToList();
+}
+
+<div class="card stack-sm" id="post-results-panel">
+    <h2>Per platform</h2>
+
+    <ul class="platform-results">
+        @foreach (var target in targets)
+        {
+            var caps = Model.Capabilities(target.Platform);
+            <li>
+                <div class="row row--between">
+                    <strong>@caps.DisplayName</strong>
+                    @if (!target.Enabled)
+                    {
+                        <span class="badge">Skipped</span>
+                    }
+                    else
+                    {
+                        @switch (target.Status)
+                        {
+                            case TargetStatus.Published:
+                                <span class="badge badge--success">Published</span>
+                                break;
+                            case TargetStatus.Failed:
+                                <span class="badge badge--error">Failed after @target.Attempts attempt@(target.Attempts == 1 ? "" : "s")</span>
+                                break;
+                            case TargetStatus.Publishing:
+                                <span class="badge badge--warn">Publishing</span>
+                                break;
+                            default:
+                                <span class="badge">Waiting</span>
+                                break;
+                        }
+                    }
+                </div>
+
+                @if (target.Enabled)
+                {
+                    <p class="small" style="white-space:pre-wrap;margin:var(--space-2) 0 0;">@target.Body</p>
+
+                    @if (target.Image is not null)
+                    {
+                        <p class="tiny muted" style="margin:var(--space-2) 0 0;">
+                            Image: @target.Image.OriginalFileName, @target.Image.Width by @target.Image.Height
+                        </p>
+                    }
+
+                    @if (target.RemoteUrl is not null)
+                    {
+                        <p class="small" style="margin:var(--space-2) 0 0;">
+                            <a href="@target.RemoteUrl" target="_blank" rel="noopener noreferrer">See it on @caps.DisplayName</a>
+                        </p>
+                    }
+
+                    @if (target.ErrorMessage is not null)
+                    {
+                        <div class="error-text">@target.ErrorMessage</div>
+
+                        @if (target.NextAttemptUtc is { } next)
+                        {
+                            <p class="tiny muted" style="margin-top:var(--space-2);">
+                                Trying again automatically at @AppTimeZone.ToLocal(next, Model.TimeZoneId).ToString("HH:mm:ss").
+                            </p>
+                        }
+
+                        <button type="button"
+                                class="btn btn--small"
+                                style="margin-top:var(--space-2);"
+                                hx-post="?handler=Retry&amp;id=@post.Id&amp;targetId=@target.Id"
+                                hx-target="#post-results-panel"
+                                hx-swap="outerHTML"
+                                hx-indicator="#retry-@target.Id">
+                            Retry @caps.DisplayName
+                        </button>
+                        <span id="retry-@target.Id" class="htmx-indicator small muted">Publishing</span>
+                    }
+                }
+            </li>
+        }
+    </ul>
+</div>

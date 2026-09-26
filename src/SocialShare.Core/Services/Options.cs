@@ -52,6 +52,9 @@ public sealed class AppOptions
     public bool RequireConfirmedAccount { get; set; }
 
     public bool RegistrationEnabled { get; set; } = true;
+
+    /// <summary>Where the docs folder is published, so the UI can link straight at it.</summary>
+    public string DocsBaseUrl { get; set; } = "https://github.com/cwoodruff/SocialShare/blob/main/docs";
 }
 
 public sealed class EmailOptions

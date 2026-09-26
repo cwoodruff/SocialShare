@@ -1,0 +1,42 @@
+@model SocialShare.Web.Pages.App.Accounts.IndexModel
+@{
+    var card = Model.Single!;
+    var platform = card.Capabilities.Platform;
+    var action = ViewData["ConfirmAction"] as string ?? "Disconnect";
+    var isForget = action == "Forget";
+}
+
+@* An inline panel rather than a browser confirm dialog, so the whole thing stays keyboard
+   reachable and htmx can swap the result straight back into place. *@
+<div class="card stack-sm" id="account-@platform">
+    <h2>@(isForget ? $"Forget {card.Capabilities.DisplayName} entirely?" : $"Disconnect {card.Capabilities.DisplayName}?")</h2>
+
+    <p class="muted small" style="margin:0;">
+        @if (isForget)
+        {
+            <text>This deletes the stored tokens and the client id and secret you typed in. Nothing already published is affected.</text>
+        }
+        else
+        {
+            <text>This deletes the stored tokens. The client id and secret you typed stay, so reconnecting is one click. Nothing already published is affected.</text>
+        }
+    </p>
+
+    <div class="row">
+        <button type="button"
+                class="btn btn--danger"
+                hx-post="?handler=@action&amp;platform=@platform"
+                hx-target="#account-@platform"
+                hx-swap="outerHTML">
+            Yes, @(isForget ? "forget it" : "disconnect")
+        </button>
+
+        <button type="button"
+                class="btn"
+                hx-get="?handler=Card&amp;platform=@platform"
+                hx-target="#account-@platform"
+                hx-swap="outerHTML">
+            Cancel
+        </button>
+    </div>
+</div>

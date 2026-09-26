@@ -1,0 +1,32 @@
+@page "/app/accounts"
+@model SocialShare.Web.Pages.App.Accounts.IndexModel
+@{
+    ViewData["Title"] = "Connected accounts";
+}
+
+<div class="stack">
+    <div class="card__header">
+        <div>
+            <h1>Connected accounts</h1>
+            <p class="muted small measure" style="margin:0;">
+                You bring your own developer app for each platform. Nothing here is shared with
+                anyone else, and everything secret is encrypted before it is stored.
+                The <a href="@Model.DocsUrl(null)" rel="noopener">setup guide</a> has the step by step for each one.
+            </p>
+        </div>
+    </div>
+
+    @if (Model.StatusMessage is not null)
+    {
+        <p class="notice notice--success">@Model.StatusMessage</p>
+    }
+    @if (Model.ErrorMessage is not null)
+    {
+        <p class="notice notice--error">@Model.ErrorMessage</p>
+    }
+
+    @foreach (var card in Model.Cards)
+    {
+        <partial name="_AccountCard" model="Model" view-data='new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData) { ["Card"] = card }' />
+    }
+</div>

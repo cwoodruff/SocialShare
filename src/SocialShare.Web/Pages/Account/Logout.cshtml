@@ -1,0 +1,13 @@
+@page "/logout"
+@model SocialShare.Web.Pages.Account.LogoutModel
+@{
+    ViewData["Title"] = "Sign out";
+}
+
+<div class="auth card stack">
+    <h1>Sign out</h1>
+    <p class="muted">You are still signed in. Confirm below to sign out.</p>
+    <form method="post">
+        <button type="submit" class="btn btn--primary btn--block">Sign out</button>
+    </form>
+</div>

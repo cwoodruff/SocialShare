@@ -1,0 +1,15 @@
+@model SocialShare.Core.Domain.PostStatus
+@{
+    var (cssClass, label) = Model switch
+    {
+        PostStatus.Draft => ("badge", "Draft"),
+        PostStatus.Scheduled => ("badge badge--info", "Scheduled"),
+        PostStatus.Publishing => ("badge badge--warn", "Publishing"),
+        PostStatus.Published => ("badge badge--success", "Published"),
+        PostStatus.PartiallyPublished => ("badge badge--warn", "Partly published"),
+        PostStatus.Failed => ("badge badge--error", "Failed"),
+        PostStatus.Canceled => ("badge", "Canceled"),
+        _ => ("badge", Model.ToString())
+    };
+}
+<span class="@cssClass">@label</span>

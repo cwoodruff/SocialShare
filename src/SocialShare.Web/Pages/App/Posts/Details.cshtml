@@ -1,0 +1,87 @@
+@page "/app/posts/{id:guid}"
+@model SocialShare.Web.Pages.App.Posts.DetailsModel
+@{
+    ViewData["Title"] = Model.Post.Title;
+}
+
+<div class="stack">
+    <div class="card__header">
+        <div>
+            <h1>@Model.Post.Title</h1>
+            <p class="muted small row" style="margin:0;">
+                <partial name="_PostStatusBadge" model="Model.Post.Status" />
+                <span>
+                    @if (Model.Post.ScheduledUtc is { } scheduled)
+                    {
+                        <text>Scheduled for @AppTimeZone.ToLocal(scheduled, Model.TimeZoneId).ToString("dddd d MMMM yyyy, h:mm tt") in @Model.TimeZoneId</text>
+                    }
+                    else if (Model.Post.PublishedUtc is { } published)
+                    {
+                        <text>Published @AppTimeZone.ToLocal(published, Model.TimeZoneId).ToString("dddd d MMMM yyyy, h:mm tt") in @Model.TimeZoneId</text>
+                    }
+                    else
+                    {
+                        <text>Created @AppTimeZone.ToLocal(Model.Post.CreatedUtc, Model.TimeZoneId).ToString("d MMM yyyy, h:mm tt")</text>
+                    }
+                </span>
+            </p>
+        </div>
+    </div>
+
+    @if (Model.StatusMessage is not null)
+    {
+        <p class="notice notice--success">@Model.StatusMessage</p>
+    }
+    @if (Model.ErrorMessage is not null)
+    {
+        <p class="notice notice--error">@Model.ErrorMessage</p>
+    }
+
+    <div id="post-actions">
+        <partial name="_PostActions" model="Model" />
+    </div>
+
+    <div id="post-results-panel">
+        <partial name="_PostResultsPanel" model="Model" />
+    </div>
+
+    @if (Model.Logs.Count > 0)
+    {
+        <details class="card">
+            <summary style="cursor:pointer;"><strong>Publish log</strong> <span class="muted small">@Model.Logs.Count attempt@(Model.Logs.Count == 1 ? "" : "s")</span></summary>
+            <div class="table-wrap" style="margin-top:var(--space-4);">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">When</th>
+                            <th scope="col">Platform</th>
+                            <th scope="col">Attempt</th>
+                            <th scope="col">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model.Logs)
+                        {
+                            <tr>
+                                <td class="nowrap">@AppTimeZone.ToLocal(log.StartedUtc, Model.TimeZoneId).ToString("d MMM, HH:mm:ss")</td>
+                                <td>@log.Platform</td>
+                                <td>@log.AttemptNumber</td>
+                                <td>
+                                    @if (log.Success)
+                                    {
+                                        <span class="badge badge--success">Success</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge--error">Failed</span>
+                                    }
+                                    <div class="tiny muted" style="margin-top:var(--space-1);word-break:break-word;">@log.Message</div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    }
+</div>

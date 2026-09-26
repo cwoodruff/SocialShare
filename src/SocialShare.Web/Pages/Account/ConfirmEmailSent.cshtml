@@ -1,0 +1,17 @@
+@page "/check-your-email"
+@model SocialShare.Web.Pages.Account.ConfirmEmailSentModel
+@{
+    ViewData["Title"] = "Check your email";
+}
+
+<div class="auth card stack">
+    <h1>Check your email</h1>
+    <p class="muted">
+        A confirmation link is on its way to <strong>@Model.Email</strong>. Click it and then sign in.
+    </p>
+    <p class="small muted">
+        In development the link is written to the server log instead of being emailed, so look
+        in the console window running the app.
+    </p>
+    <p><a class="btn" href="/login">Back to sign in</a></p>
+</div>

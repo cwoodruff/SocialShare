@@ -1,0 +1,11 @@
+@page "/confirm-email"
+@model SocialShare.Web.Pages.Account.ConfirmEmailModel
+@{
+    ViewData["Title"] = "Confirm email";
+}
+
+<div class="auth card stack">
+    <h1>Confirm email</h1>
+    <p class="notice @(Model.Succeeded ? "notice--success" : "notice--error")">@Model.Message</p>
+    <p><a class="btn btn--primary" href="/login">Go to sign in</a></p>
+</div>

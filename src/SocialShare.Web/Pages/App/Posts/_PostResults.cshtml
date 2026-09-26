@@ -1,0 +1,67 @@
+@model SocialShare.Web.Pages.App.Posts.IndexModel
+
+<div class="card">
+    <div class="card__header">
+        <h2>@Model.TotalCount post@(Model.TotalCount == 1 ? "" : "s")</h2>
+        <span class="small muted">Times in @Model.TimeZoneId</span>
+    </div>
+
+    @if (Model.Results.Count == 0)
+    {
+        <p class="muted small" style="margin:0;">Nothing matches those filters.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Title</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">When</th>
+                        <th scope="col">Platforms</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var post in Model.Results)
+                    {
+                        var when = post.ScheduledUtc ?? post.PublishedUtc ?? post.CreatedUtc;
+                        <tr>
+                            <td>
+                                <a href="/app/posts/@post.Id">@post.Title</a>
+                            </td>
+                            <td><partial name="_PostStatusBadge" model="post.Status" /></td>
+                            <td class="nowrap">@AppTimeZone.ToLocal(when, Model.TimeZoneId).ToString("d MMM yyyy, h:mm tt")</td>
+                            <td><partial name="_PlatformBadges" model="post" /></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav class="row" aria-label="Pages" style="margin-top:var(--space-4);">
+                @if (Model.PageNumber > 1)
+                {
+                    <a class="btn btn--small"
+                       href="@Model.PageLink(Model.PageNumber - 1)"
+                       hx-get="@Model.PageLink(Model.PageNumber - 1)"
+                       hx-target="#post-results"
+                       hx-swap="innerHTML"
+                       hx-push-url="true">Previous</a>
+                }
+                <span class="small muted">Page @Model.PageNumber of @Model.TotalPages</span>
+                @if (Model.PageNumber < Model.TotalPages)
+                {
+                    <a class="btn btn--small"
+                       href="@Model.PageLink(Model.PageNumber + 1)"
+                       hx-get="@Model.PageLink(Model.PageNumber + 1)"
+                       hx-target="#post-results"
+                       hx-swap="innerHTML"
+                       hx-push-url="true">Next</a>
+                }
+            </nav>
+        }
+    }
+</div>

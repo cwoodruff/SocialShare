@@ -1,8 +1,39 @@
-﻿@page
-@model PrivacyModel
+@page "/privacy"
 @{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Privacy";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<article class="card measure stack">
+    <h1>Privacy</h1>
+    <p class="muted small">This is a starting point. Edit it before you point anyone else at this app.</p>
+
+    <h2>What this app stores</h2>
+    <ul class="small">
+        <li>Your email address and a hashed password, for signing in.</li>
+        <li>Your display name and time zone.</li>
+        <li>The developer app credentials and access tokens you enter for each social platform, encrypted at rest.</li>
+        <li>The posts you write, the images you upload, and the result of every publish attempt.</li>
+    </ul>
+
+    <h2>What it sends elsewhere</h2>
+    <p class="small">
+        The bodies and images you publish go to the platforms you enable, using your own
+        credentials. Nothing is sent anywhere else. There is no analytics script and no tracking.
+    </p>
+
+    <h2>Uploaded images are public</h2>
+    <p class="small">
+        Threads and Instagram fetch images from a URL rather than accepting an upload, so every
+        image you upload is served from this app at a random, unguessable address. It is not
+        listed and it is not linked, but anyone with the exact URL can open it.
+    </p>
+
+    <h2>Deleting things</h2>
+    <p class="small">
+        Deleting a post removes it here. It does not remove anything already published to a
+        platform. Disconnecting an account deletes the stored tokens for it.
+    </p>
+
+    <h2>Contact</h2>
+    <p class="small">Questions go to the person running this instance.</p>
+</article>

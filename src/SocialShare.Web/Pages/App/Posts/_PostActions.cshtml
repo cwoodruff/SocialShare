@@ -1,0 +1,43 @@
+@model SocialShare.Web.Pages.App.Posts.DetailsModel
+@{
+    var post = Model.Post;
+    var editable = post.Status is not PostStatus.Publishing;
+}
+
+<div class="card row" id="post-actions">
+    @if (editable)
+    {
+        <a class="btn" href="/app/posts/@post.Id/edit">Edit</a>
+    }
+
+    <a class="btn" href="/app/posts/new?duplicateOf=@post.Id">Duplicate</a>
+
+    @if (post.Status is PostStatus.Draft or PostStatus.Canceled)
+    {
+        <form method="post" asp-page-handler="Publish" asp-route-id="@post.Id" style="display:inline;">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn--primary">Publish now</button>
+        </form>
+    }
+
+    @if (post.Status == PostStatus.Scheduled)
+    {
+        <button type="button"
+                class="btn btn--danger"
+                hx-get="?handler=Confirm&amp;id=@post.Id&amp;action=Cancel"
+                hx-target="#post-actions"
+                hx-swap="outerHTML">
+            Cancel schedule
+        </button>
+    }
+
+    <span class="spacer"></span>
+
+    <button type="button"
+            class="btn btn--danger btn--small"
+            hx-get="?handler=Confirm&amp;id=@post.Id&amp;action=Delete"
+            hx-target="#post-actions"
+            hx-swap="outerHTML">
+        Delete
+    </button>
+</div>

@@ -1,0 +1,20 @@
+@model SocialShare.Web.Pages.App.Posts.ComposeModel
+@{
+    var message = ViewData["CopyMessage"] as string;
+}
+
+@if (message is not null)
+{
+    <span class="muted">@message</span>
+}
+
+@* Out of band swaps put the copied text straight into each platform body without reloading
+   the page or losing anything else the user has typed. *@
+@foreach (var panel in Model.Panels.Where(p => p.Input.Enabled))
+{
+    <textarea id="body-@panel.Index"
+              name="Targets[@panel.Index].Body"
+              rows="7"
+              data-counter="counter-@panel.Index"
+              hx-swap-oob="true">@panel.Input.Body</textarea>
+}

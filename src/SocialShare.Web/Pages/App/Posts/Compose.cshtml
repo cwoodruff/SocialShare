@@ -1,0 +1,173 @@
+@page "/app/posts/new"
+@model SocialShare.Web.Pages.App.Posts.ComposeModel
+@{
+    ViewData["Title"] = Model.IsEdit ? "Edit post" : "New post";
+    var handlerRoute = Model.IsEdit ? $"&id={Model.PostId}" : "";
+}
+
+<form method="post"
+      asp-page-handler="Save"
+      asp-route-id="@Model.PostId"
+      id="compose-form"
+      class="stack"
+      data-tabs
+      data-toggle-scope>
+
+    <div class="card__header">
+        <h1>@(Model.IsEdit ? "Edit post" : "New post")</h1>
+        @if (Model.IsEdit)
+        {
+            <a class="btn btn--quiet btn--small" href="/app/posts/@Model.PostId">Back to the post</a>
+        }
+    </div>
+
+    <partial name="_ValidationSummary" model="ModelState" />
+
+    <div class="card stack-sm">
+        <div class="field">
+            <label for="Title">Title</label>
+            <input id="Title" name="Title" value="@Model.Title" required maxlength="300"
+                   placeholder="Just for you. Never sent anywhere." />
+            <span class="field__help">This is how you will find the post later. No platform ever sees it.</span>
+        </div>
+
+        <div class="field" style="margin-bottom:0;">
+            <label for="MasterBody">Master draft</label>
+            <textarea id="MasterBody" name="MasterBody" rows="4"
+                      placeholder="Write the thought once here, then copy it into the platforms you want and edit each one.">@Model.MasterBody</textarea>
+            <span class="field__help">Optional. Nothing is published from this box.</span>
+        </div>
+
+        <div class="row">
+            <button type="button"
+                    class="btn btn--small"
+                    hx-post="?handler=CopyMaster@(handlerRoute)"
+                    hx-include="#compose-form"
+                    hx-target="#copy-result"
+                    hx-swap="innerHTML">
+                Copy to all enabled
+            </button>
+            <span id="copy-result" class="small" aria-live="polite"></span>
+        </div>
+    </div>
+
+    <div class="compose-tabs" role="tablist" aria-label="Platforms">
+        @foreach (var panel in Model.Panels)
+        {
+            <button type="button"
+                    class="compose-tab"
+                    role="tab"
+                    id="tab-@panel.Index"
+                    aria-controls="panel-@panel.Index"
+                    aria-selected="@(panel.Index == 0 ? "true" : "false")"
+                    tabindex="@(panel.Index == 0 ? 0 : -1)"
+                    data-enabled="@(panel.Input.Enabled ? "true" : "false")">
+                <span class="dot" aria-hidden="true"></span>@panel.Capabilities.DisplayName
+            </button>
+        }
+    </div>
+
+    @foreach (var panel in Model.Panels)
+    {
+        <div class="card compose-panel stack-sm"
+             role="tabpanel"
+             id="panel-@panel.Index"
+             aria-labelledby="tab-@panel.Index"
+             hidden="@(panel.Index != 0)">
+
+            <input type="hidden" name="Targets[@panel.Index].Platform" value="@panel.Capabilities.Platform" />
+
+            <div class="card__header">
+                <h2>@panel.Capabilities.DisplayName</h2>
+                <label class="checkbox">
+                    <input type="checkbox"
+                           name="Targets[@panel.Index].Enabled"
+                           value="true"
+                           checked="@panel.Input.Enabled"
+                           data-toggles-tab="tab-@panel.Index" />
+                    Publish to @panel.Capabilities.DisplayName
+                </label>
+            </div>
+
+            @if (!panel.AccountConnected)
+            {
+                <p class="notice notice--warn">
+                    @panel.Capabilities.DisplayName is not connected.
+                    <a href="/app/accounts">Connect it</a> before publishing. You can still write and save a draft.
+                </p>
+            }
+            @if (panel.Capabilities.RequiresPaidTier)
+            {
+                <p class="notice notice--warn">
+                    Posting to @panel.Capabilities.DisplayName needs a paid tier on your developer project.
+                    Connecting works on the free tier, posting comes back as a 403.
+                </p>
+            }
+            @if (panel.Capabilities.ImageRequired)
+            {
+                <p class="notice notice--info">
+                    @panel.Capabilities.DisplayName has no text only post. Attach an image or leave this platform off.
+                </p>
+            }
+
+            <div class="field" style="margin-bottom:0;">
+                <label for="body-@panel.Index">Body</label>
+                <textarea id="body-@panel.Index"
+                          name="Targets[@panel.Index].Body"
+                          rows="7"
+                          data-counter="counter-@panel.Index"
+                          placeholder="What goes out on @panel.Capabilities.DisplayName.">@panel.Input.Body</textarea>
+                <div class="row row--between" style="margin-top:var(--space-2);">
+                    <span class="field__help" style="margin:0;">
+                        Links and mentions are handled by the platform. Nothing is shortened.
+                    </span>
+                    <output id="counter-@panel.Index"
+                            class="counter"
+                            for="body-@panel.Index"
+                            data-limit="@panel.CharacterLimit"
+                            aria-live="polite">0 of @panel.CharacterLimit</output>
+                </div>
+            </div>
+
+            <partial name="_ImageSlot" model="Model"
+                     view-data='new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData) { ["SlotIndex"] = panel.Index }' />
+        </div>
+    }
+
+    <div class="card stack-sm">
+        <h2>When</h2>
+
+        <div class="field">
+            <label for="ScheduledLocal">Schedule for</label>
+            <input id="ScheduledLocal"
+                   name="ScheduledLocal"
+                   type="datetime-local"
+                   value="@(Model.ScheduledLocal?.ToString("yyyy-MM-ddTHH:mm"))"
+                   data-echo="schedule-echo" />
+            <span class="field__help">
+                Times are in your profile zone, <strong>@Model.TimeZoneId</strong>.
+                <span id="schedule-echo" data-zone="@Model.TimeZoneId" class="muted"></span>
+            </span>
+        </div>
+
+        <div class="row">
+            <button type="submit"
+                    class="btn btn--primary"
+                    formaction="?handler=Publish@(handlerRoute)">
+                Publish now
+            </button>
+
+            <button type="submit"
+                    class="btn"
+                    formaction="?handler=Schedule@(handlerRoute)">
+                Schedule
+            </button>
+
+            <button type="submit" class="btn btn--quiet">Save draft</button>
+
+            <span class="spacer"></span>
+
+            <a class="btn btn--quiet btn--small" href="/app/posts">Cancel</a>
+        </div>
+    </div>
+</form>

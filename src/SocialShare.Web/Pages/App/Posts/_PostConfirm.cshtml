@@ -1,0 +1,34 @@
+@model SocialShare.Web.Pages.App.Posts.DetailsModel
+@{
+    var post = Model.Post;
+    var action = ViewData["ConfirmAction"] as string ?? "Delete";
+    var isDelete = action == "Delete";
+}
+
+@* Inline confirm rather than a browser dialog. *@
+<div class="card stack-sm" id="post-actions">
+    <h2>@(isDelete ? "Delete this post?" : "Cancel the schedule?")</h2>
+    <p class="muted small" style="margin:0;">
+        @if (isDelete)
+        {
+            <text>This removes the post, its per platform bodies and its publish log from SocialShare. Anything already published to a platform stays published there.</text>
+        }
+        else
+        {
+            <text>The post stops being scheduled and moves to canceled. You can publish it by hand later.</text>
+        }
+    </p>
+    <div class="row">
+        <form method="post" asp-page-handler="@action" asp-route-id="@post.Id" style="display:inline;">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn--danger">Yes, @(isDelete ? "delete it" : "cancel it")</button>
+        </form>
+        <button type="button"
+                class="btn"
+                hx-get="?handler=Actions&amp;id=@post.Id"
+                hx-target="#post-actions"
+                hx-swap="outerHTML">
+            Keep it
+        </button>
+    </div>
+</div>

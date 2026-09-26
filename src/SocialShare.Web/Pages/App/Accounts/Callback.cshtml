@@ -1,0 +1,11 @@
+@page "/app/accounts/callback/{platform}"
+@model SocialShare.Web.Pages.App.Accounts.CallbackModel
+@{
+    ViewData["Title"] = "Finishing the connection";
+}
+
+<div class="auth card stack">
+    <h1>@(Model.Succeeded ? "Connected" : "That did not work")</h1>
+    <p class="notice @(Model.Succeeded ? "notice--success" : "notice--error")">@Model.Message</p>
+    <p><a class="btn btn--primary" href="/app/accounts">Back to accounts</a></p>
+</div>

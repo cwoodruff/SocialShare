@@ -1,52 +1,91 @@
-﻿<!DOCTYPE html>
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IAntiforgery Antiforgery
+@{
+    var signedIn = SignInManager.IsSignedIn(User);
+    var isAdmin = signedIn && User.IsInRole("Admin");
+    var title = ViewData["Title"] as string;
+    var antiforgeryToken = Antiforgery.GetAndStoreTokens(ViewContext.HttpContext).RequestToken;
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SocialShare.Web</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(title is null ? "SocialShare" : title + " - SocialShare")</title>
+    <meta name="description" content="@(ViewData["Description"] as string ?? "Write one post six ways, attach an image to each, and publish or schedule them all at once.")" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/SocialShare.Web.styles.css" asp-append-version="true" />
+    <link rel="icon" href="~/favicon.svg" type="image/svg+xml" />
+    <script src="~/lib/htmx/htmx.min.js" defer></script>
+    <script src="~/js/socialshare.js" defer></script>
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">SocialShare.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+@* Every htmx request carries the antiforgery token, including posts from buttons that sit
+   outside a form. The header name is configured in Program.cs. *@
+<body hx-boost="true" hx-headers='@("{\"RequestVerificationToken\": \"" + antiforgeryToken + "\"}")'>
+    <a class="skip-link" href="#main">Skip to content</a>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - SocialShare.Web - <a asp-area="" asp-page="/Privacy">Privacy</a>
+    <header class="site-header">
+        <div class="page site-header__inner">
+            <a class="wordmark" href="@(signedIn ? "/app" : "/")">
+                <partial name="_Wordmark" />
+                <span>Social<span class="wordmark__share">Share</span></span>
+            </a>
+
+            <nav class="nav" aria-label="Main">
+                @if (signedIn)
+                {
+                    <a href="/app" aria-current="@Current("/app")">Dashboard</a>
+                    <a href="/app/posts" aria-current="@Current("/app/posts")">Posts</a>
+                    <a href="/app/accounts" aria-current="@Current("/app/accounts")">Accounts</a>
+                    <a href="/app/settings" aria-current="@Current("/app/settings")">Settings</a>
+                    @if (isAdmin)
+                    {
+                        <a href="/admin" aria-current="@Current("/admin")">Admin</a>
+                    }
+                    <form method="post" action="/logout" hx-boost="false">
+                        <button type="submit" class="linkish btn btn--quiet btn--small">Sign out</button>
+                    </form>
+                }
+                else
+                {
+                    <a href="/login" aria-current="@Current("/login")">Sign in</a>
+                    <a class="btn btn--primary btn--small" href="/register">Create account</a>
+                }
+            </nav>
+        </div>
+    </header>
+
+    <main class="main" id="main">
+        <div class="page">
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="page site-footer__inner">
+            <span>SocialShare. Built by Chris Woodruff.</span>
+            <span class="row">
+                <a href="/privacy">Privacy</a>
+                <a href="/terms">Terms</a>
+                <a href="/health">Health</a>
+            </span>
         </div>
     </footer>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+
+@functions {
+    string? Current(string path)
+    {
+        var current = ViewContext.HttpContext.Request.Path.Value ?? "/";
+        var match = path == "/"
+            ? current == "/"
+            : current.Equals(path, StringComparison.OrdinalIgnoreCase)
+              || current.StartsWith(path + "/", StringComparison.OrdinalIgnoreCase);
+
+        return match ? "page" : null;
+    }
+}

@@ -1,0 +1,118 @@
+@page "/app"
+@model SocialShare.Web.Pages.App.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="stack">
+    <div class="card__header">
+        <div>
+            <h1>Hi @Model.DisplayName</h1>
+            <p class="muted small" style="margin:0;">
+                @Model.ConnectedCount of @Model.PlatformCount platforms connected. Times shown in @Model.TimeZoneId.
+            </p>
+        </div>
+        <a class="btn btn--primary" href="/app/posts/new">Write a post</a>
+    </div>
+
+    @if (Model.StatusMessage is not null)
+    {
+        <p class="notice notice--success">@Model.StatusMessage</p>
+    }
+
+    @if (Model.ConnectedCount == 0)
+    {
+        <p class="notice notice--info">
+            Nothing is connected yet, so nothing can publish. Start on the
+            <a href="/app/accounts">accounts page</a>. Bluesky is the quickest: it only needs an app password.
+        </p>
+    }
+
+    @if (Model.NeedsAttention.Count > 0)
+    {
+        <p class="notice notice--warn">
+            These need reconnecting: @string.Join(", ", Model.NeedsAttention).
+            <a href="/app/accounts">Fix them</a>.
+        </p>
+    }
+
+    <div class="card">
+        <div class="card__header">
+            <h2>Scheduled</h2>
+            <a class="small" href="/app/posts?status=Scheduled">See all</a>
+        </div>
+
+        @if (Model.Upcoming.Count == 0)
+        {
+            <p class="muted small" style="margin:0;">Nothing is queued up.</p>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Title</th>
+                            <th scope="col">Going out</th>
+                            <th scope="col">Platforms</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var post in Model.Upcoming)
+                        {
+                            <tr>
+                                <td><a href="/app/posts/@post.Id">@post.Title</a></td>
+                                <td class="nowrap">
+                                    @(post.ScheduledUtc is { } when
+                                        ? AppTimeZone.ToLocal(when, Model.TimeZoneId).ToString("ddd d MMM, h:mm tt")
+                                        : "Not set")
+                                </td>
+                                <td><partial name="_PlatformBadges" model="post" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <div class="card">
+        <div class="card__header">
+            <h2>Recently published</h2>
+            <a class="small" href="/app/posts">See all</a>
+        </div>
+
+        @if (Model.Recent.Count == 0)
+        {
+            <p class="muted small" style="margin:0;">Nothing has gone out yet.</p>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Title</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">When</th>
+                            <th scope="col">Platforms</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var post in Model.Recent)
+                        {
+                            <tr>
+                                <td><a href="/app/posts/@post.Id">@post.Title</a></td>
+                                <td><partial name="_PostStatusBadge" model="post.Status" /></td>
+                                <td class="nowrap">
+                                    @AppTimeZone.ToLocal(post.PublishedUtc ?? post.UpdatedUtc, Model.TimeZoneId).ToString("d MMM, h:mm tt")
+                                </td>
+                                <td><partial name="_PlatformBadges" model="post" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

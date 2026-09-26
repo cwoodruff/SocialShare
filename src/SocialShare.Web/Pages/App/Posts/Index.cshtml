@@ -1,0 +1,75 @@
+@page "/app/posts"
+@model SocialShare.Web.Pages.App.Posts.IndexModel
+@{
+    ViewData["Title"] = "Posts";
+}
+
+<div class="stack">
+    <div class="card__header">
+        <h1>Posts</h1>
+        <a class="btn btn--primary" href="/app/posts/new">Write a post</a>
+    </div>
+
+    @if (Model.StatusMessage is not null)
+    {
+        <p class="notice notice--success">@Model.StatusMessage</p>
+    }
+
+    <form class="card"
+          method="get"
+          hx-get="/app/posts"
+          hx-target="#post-results"
+          hx-swap="innerHTML"
+          hx-trigger="submit, change from:select, change from:input[type=date], keyup changed delay:400ms from:input[type=search]"
+          hx-push-url="true">
+
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));">
+            <div class="field" style="margin-bottom:0;">
+                <label for="search">Search</label>
+                <input id="search" name="search" type="search" value="@Model.Search" placeholder="Title or body" />
+            </div>
+
+            <div class="field" style="margin-bottom:0;">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="">Any status</option>
+                    @foreach (var value in Enum.GetValues<PostStatus>())
+                    {
+                        <option value="@value" selected="@(Model.Status == value)">@value</option>
+                    }
+                </select>
+            </div>
+
+            <div class="field" style="margin-bottom:0;">
+                <label for="platform">Platform</label>
+                <select id="platform" name="platform">
+                    <option value="">Any platform</option>
+                    @foreach (var capability in Model.Platforms)
+                    {
+                        <option value="@capability.Platform" selected="@(Model.Platform == capability.Platform)">@capability.DisplayName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="field" style="margin-bottom:0;">
+                <label for="from">From</label>
+                <input id="from" name="from" type="date" value="@(Model.From?.ToString("yyyy-MM-dd"))" />
+            </div>
+
+            <div class="field" style="margin-bottom:0;">
+                <label for="to">To</label>
+                <input id="to" name="to" type="date" value="@(Model.To?.ToString("yyyy-MM-dd"))" />
+            </div>
+        </div>
+
+        <div class="row" style="margin-top:var(--space-4);">
+            <button type="submit" class="btn btn--small">Apply</button>
+            <a class="btn btn--quiet btn--small" href="/app/posts">Clear</a>
+            <span class="htmx-indicator small muted">Loading</span>
+        </div>
+    </form>
+
+    <div id="post-results">
+        <partial name="_PostResults" model="Model" />
+    </div>
+</div>

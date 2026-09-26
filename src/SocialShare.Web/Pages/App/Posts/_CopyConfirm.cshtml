@@ -1,0 +1,25 @@
+@model SocialShare.Web.Pages.App.Posts.ComposeModel
+@{
+    var overwrites = ViewData["Overwrites"] as List<string> ?? [];
+}
+
+@* Inline confirm instead of a browser dialog, so it is keyboard reachable and htmx swaps the
+   result straight back in. *@
+<span class="notice notice--warn" style="display:inline-block;">
+    This will overwrite @string.Join(", ", overwrites).
+    <button type="button"
+            class="btn btn--small btn--danger"
+            hx-post="?handler=CopyMaster&amp;confirmed=true"
+            hx-include="#compose-form"
+            hx-target="#copy-result"
+            hx-swap="innerHTML">
+        Overwrite
+    </button>
+    <button type="button"
+            class="btn btn--small"
+            hx-get="?handler=ClearCopy"
+            hx-target="#copy-result"
+            hx-swap="innerHTML">
+        Cancel
+    </button>
+</span>

@@ -1,0 +1,25 @@
+@model SocialShare.Core.Domain.Post
+@{
+    var targets = Model.Targets.Where(t => t.Enabled).OrderBy(t => (int)t.Platform).ToList();
+}
+
+@if (targets.Count == 0)
+{
+    <span class="tiny faint">None enabled</span>
+}
+else
+{
+    <span class="row" style="gap:var(--space-1);">
+        @foreach (var target in targets)
+        {
+            var cssClass = target.Status switch
+            {
+                TargetStatus.Published => "badge badge--success",
+                TargetStatus.Failed => "badge badge--error",
+                TargetStatus.Publishing => "badge badge--warn",
+                _ => "badge"
+            };
+            <span class="@cssClass">@target.Platform</span>
+        }
+    </span>
+}

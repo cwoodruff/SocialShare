@@ -1,0 +1,43 @@
+@page "/login"
+@model SocialShare.Web.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+
+<div class="auth card stack">
+    <h1>Sign in</h1>
+
+    @if (Model.StatusMessage is not null)
+    {
+        <p class="notice notice--success">@Model.StatusMessage</p>
+    }
+
+    <partial name="_ValidationSummary" model="ModelState" />
+
+    <form method="post" class="stack-sm">
+        <div class="field">
+            <label for="Email">Email</label>
+            <input id="Email" name="Input.Email" type="email" value="@Model.Input.Email" autocomplete="username" required />
+        </div>
+
+        <div class="field">
+            <label for="Password">Password</label>
+            <input id="Password" name="Input.Password" type="password" autocomplete="current-password" required />
+        </div>
+
+        <label class="checkbox" style="margin-bottom: var(--space-4);">
+            <input type="checkbox" name="Input.RememberMe" value="true" checked="@Model.Input.RememberMe" />
+            Keep me signed in
+        </label>
+
+        <button type="submit" class="btn btn--primary btn--block">Sign in</button>
+    </form>
+
+    <p class="small muted">
+        <a href="/forgot-password">Forgot your password?</a>
+        @if (Model.RegistrationEnabled)
+        {
+            <span> Or <a href="/register">create an account</a>.</span>
+        }
+    </p>
+</div>

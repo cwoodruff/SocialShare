@@ -1,10 +1,136 @@
-﻿@page
+@page "/"
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = null;
+    ViewData["Description"] = "Write one post six ways, attach an image to each version, and publish or schedule them all at once.";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="hero">
+    <h1>One post. Six versions. One click.</h1>
+    <p class="lede">
+        I got tired of writing the same thought five times, trimming it for X, padding it for
+        LinkedIn, then forgetting Mastodon entirely. SocialShare lets me write each version once,
+        in one screen, and send them all at the same moment.
+    </p>
+    <div class="row" style="margin-top: var(--space-5);">
+        @if (Model.RegistrationEnabled)
+        {
+            <a class="btn btn--primary" href="/register">Create account</a>
+        }
+        <a class="btn" href="/login">Sign in</a>
+    </div>
+</section>
+
+<section class="stack" style="margin-bottom: var(--space-7);">
+    <h2>The six it posts to</h2>
+    <ul class="platform-list">
+        @foreach (var platform in Model.Platforms)
+        {
+            <li>@platform.DisplayName</li>
+        }
+    </ul>
+    <p class="muted measure">
+        Each one gets its own body and its own featured image. Leave a platform blank and it gets
+        skipped. Every body is counted against that platform's real limit as you type, and the
+        server checks it again before anything goes out.
+    </p>
+</section>
+
+<section class="stack" style="margin-bottom: var(--space-7);">
+    <h2>How it works</h2>
+    <ol class="steps">
+        <li>
+            <h3>Connect your accounts</h3>
+            <p class="muted small">
+                You bring your own developer app for each platform and paste the client id and
+                secret in. Bluesky just needs an app password. Nothing is shared between users.
+            </p>
+        </li>
+        <li>
+            <h3>Write the versions</h3>
+            <p class="muted small">
+                Start from a master draft and copy it into the platforms you want, then edit each
+                one. Attach an image per platform, with the recommended size right next to it.
+            </p>
+        </li>
+        <li>
+            <h3>Publish or schedule</h3>
+            <p class="muted small">
+                Send it now, or pick a date and time in your own time zone. A background worker
+                picks scheduled posts up and publishes them without you being logged in.
+            </p>
+        </li>
+        <li>
+            <h3>See what happened</h3>
+            <p class="muted small">
+                Every platform reports back separately. Success gets a link to the live post,
+                failure gets the actual error text and a retry button. Partial success is normal.
+            </p>
+        </li>
+    </ol>
+</section>
+
+<section class="grid" style="margin-bottom: var(--space-7);">
+    <div class="card">
+        <h3>Scheduling that survives a restart</h3>
+        <p class="muted small">
+            A scheduled post is claimed before it publishes, so a deploy in the middle of a send
+            cannot post it twice. Failed platforms retry three times with backoff and then wait
+            for you.
+        </p>
+    </div>
+    <div class="card">
+        <h3>Your credentials stay yours</h3>
+        <p class="muted small">
+            No platform passwords are stored, because none of these APIs accept one. Tokens and
+            app passwords are encrypted before they touch the database, and the app itself holds
+            no platform credentials of its own.
+        </p>
+    </div>
+    <div class="card">
+        <h3>Honest about the limits</h3>
+        <p class="muted small">
+            X needs a paid developer tier to post at all. Instagram will not take a text only
+            post. Mastodon's character limit depends on the instance. All three are handled and
+            all three are said out loud.
+        </p>
+    </div>
+</section>
+
+<section class="stack" style="margin-bottom: var(--space-7);">
+    <h2>What the compose screen looks like</h2>
+    <p class="muted measure">
+        One tab per platform, each with its own body, counter and image. The master draft at the
+        top is optional. Here is the shape of it.
+    </p>
+
+    @* A drawn mock rather than a photo, so it stays correct in both themes and never goes stale. *@
+    <div class="mock" role="img" aria-label="Mock of the compose screen showing a tab per platform, a body with a character counter, and publish controls.">
+        <div class="mock__bar"><span>SocialShare</span><span class="faint">/app/posts/new</span></div>
+        <div class="mock__body stack-sm">
+            <div class="compose-tabs" aria-hidden="true">
+                @foreach (var platform in Model.Platforms)
+                {
+                    <span class="compose-tab" data-enabled="@(platform.Platform is SocialPlatform.LinkedIn or SocialPlatform.Bluesky or SocialPlatform.Mastodon ? "true" : "false")">
+                        <span class="dot"></span>@platform.DisplayName
+                    </span>
+                }
+            </div>
+            <div class="mock__row"><span>Body</span><span class="counter">214 of 300</span></div>
+            <div class="mock__row"><span>Featured image</span><span class="faint">landscape-1200x675.jpg</span></div>
+            <div class="mock__row"><span>Schedule</span><span class="faint">Tomorrow, 8:30 AM, America/Detroit</span></div>
+            <div class="mock__row"><span class="faint">LinkedIn, Bluesky, Mastodon enabled</span><span class="badge badge--accent">Ready</span></div>
+        </div>
+    </div>
+</section>
+
+<section class="card">
+    <h2>Worth knowing before you sign up</h2>
+    <ul class="muted small measure">
+        <li>You need your own developer app for LinkedIn, X, Threads, Instagram and, indirectly, Mastodon. Bluesky needs nothing but an app password.</li>
+        <li>Posting to X requires a paid tier on your X developer project. Connecting works on the free tier, posting does not.</li>
+        <li>Instagram needs a Business or Creator account linked to a Facebook Page, and every Instagram post needs an image.</li>
+        <li>Uploaded images are served from a public but unguessable URL, because Threads and Instagram fetch images rather than accept uploads.</li>
+    </ul>
+    <p class="small"><a href="/register">Create an account</a> and the setup guide walks each of those through step by step.</p>
+</section>
