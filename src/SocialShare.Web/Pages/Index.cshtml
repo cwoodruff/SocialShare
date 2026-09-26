@@ -98,30 +98,31 @@
 </section>
 
 <section class="stack" style="margin-bottom: var(--space-7);">
-    <h2>What the compose screen looks like</h2>
+    <h2>What it looks like</h2>
     <p class="muted measure">
-        One tab per platform, each with its own body, counter and image. The master draft at the
-        top is optional. Here is the shape of it.
+        One tab per platform, each with its own body, live counter and image. The master draft at
+        the top is optional. These are screenshots of the real thing.
     </p>
 
-    @* A drawn mock rather than a photo, so it stays correct in both themes and never goes stale. *@
-    <div class="mock" role="img" aria-label="Mock of the compose screen showing a tab per platform, a body with a character counter, and publish controls.">
-        <div class="mock__bar"><span>SocialShare</span><span class="faint">/app/posts/new</span></div>
-        <div class="mock__body stack-sm">
-            <div class="compose-tabs" aria-hidden="true">
-                @foreach (var platform in Model.Platforms)
-                {
-                    <span class="compose-tab" data-enabled="@(platform.Platform is SocialPlatform.LinkedIn or SocialPlatform.Bluesky or SocialPlatform.Mastodon ? "true" : "false")">
-                        <span class="dot"></span>@platform.DisplayName
-                    </span>
-                }
-            </div>
-            <div class="mock__row"><span>Body</span><span class="counter">214 of 300</span></div>
-            <div class="mock__row"><span>Featured image</span><span class="faint">landscape-1200x675.jpg</span></div>
-            <div class="mock__row"><span>Schedule</span><span class="faint">Tomorrow, 8:30 AM, America/Detroit</span></div>
-            <div class="mock__row"><span class="faint">LinkedIn, Bluesky, Mastodon enabled</span><span class="badge badge--accent">Ready</span></div>
-        </div>
-    </div>
+    <figure style="margin:0;">
+        <img src="~/img/compose.png"
+             alt="The compose screen with a tab for each of the six platforms, the Bluesky tab selected, a body with a live character counter reading 186 of 300, and an attached featured image with alt text."
+             width="1600" height="1044"
+             style="border:1px solid var(--border);border-radius:var(--radius-lg);" />
+        <figcaption class="small muted" style="margin-top:var(--space-2);">
+            The compose screen, with the Bluesky version selected.
+        </figcaption>
+    </figure>
+
+    <figure style="margin:0;">
+        <img src="~/img/dashboard.png"
+             alt="The dashboard showing scheduled posts with their times and platforms, and recently published posts with a per platform status."
+             width="1600" height="777"
+             style="border:1px solid var(--border);border-radius:var(--radius-lg);" />
+        <figcaption class="small muted" style="margin-top:var(--space-2);">
+            The dashboard. What is queued up, and what already went out.
+        </figcaption>
+    </figure>
 </section>
 
 <section class="card">

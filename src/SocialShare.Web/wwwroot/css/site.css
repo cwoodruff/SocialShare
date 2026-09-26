@@ -38,7 +38,7 @@
   --surface-alt: #eff4f2;
   --surface-sunken: #e7eeeb;
   --border: #d8e1df;
-  --border-strong: #bccac6;
+  --border-strong: #7b8885;
   --text: #1b262c;
   --text-muted: #566a71;
   --text-faint: #7d8f95;
@@ -75,7 +75,7 @@
     --surface-alt: #1e2a2f;
     --surface-sunken: #141d21;
     --border: #2b3a40;
-    --border-strong: #3c4f56;
+    --border-strong: #6b8187;
     --text: #e7eeec;
     --text-muted: #a2b4b8;
     --text-faint: #7f9298;
@@ -111,7 +111,7 @@
   --surface-alt: #1e2a2f;
   --surface-sunken: #141d21;
   --border: #2b3a40;
-  --border-strong: #3c4f56;
+  --border-strong: #6b8187;
   --text: #e7eeec;
   --text-muted: #a2b4b8;
   --text-faint: #7f9298;
@@ -422,6 +422,7 @@ pre {
   margin-top: var(--space-1);
 }
 
+input:not([type]),
 input[type="text"],
 input[type="email"],
 input[type="password"],

@@ -20,7 +20,7 @@
         <form method="post" asp-page-handler="Profile" class="stack-sm">
             <div class="field">
                 <label for="DisplayName">Display name</label>
-                <input id="DisplayName" name="Profile.DisplayName" value="@Model.Profile.DisplayName" required maxlength="200" />
+                <input id="DisplayName" name="Profile.DisplayName" type="text" value="@Model.Profile.DisplayName" required maxlength="200" />
             </div>
 
             <div class="field">
@@ -38,7 +38,7 @@
 
             <div class="field">
                 <label for="Email">Email</label>
-                <input id="Email" value="@Model.Email" disabled />
+                <input id="Email" type="email" value="@Model.Email" disabled />
                 <span class="field__help">Changing the sign in email is not built yet.</span>
             </div>
 
