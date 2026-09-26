@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <UserSecretsId>socialshare-web-7f2c1a9e</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SendGrid" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SocialShare.Core\SocialShare.Core.csproj" />
+    <ProjectReference Include="..\SocialShare.Data\SocialShare.Data.csproj" />
+    <ProjectReference Include="..\SocialShare.Platforms\SocialShare.Platforms.csproj" />
+  </ItemGroup>
+
+</Project>

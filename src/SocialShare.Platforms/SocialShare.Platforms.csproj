@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\SocialShare.Core\SocialShare.Core.csproj" />
+  </ItemGroup>
+
+</Project>

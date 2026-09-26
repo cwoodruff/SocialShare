@@ -427,3 +427,10 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# SocialShare local data
+App_Data/
+*.db
+*.db-shm
+*.db-wal
+.idea/
