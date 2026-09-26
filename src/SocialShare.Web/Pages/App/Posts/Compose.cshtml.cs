@@ -350,13 +350,13 @@ public class ComposeModel(
         if (enabled.Count == 0)
         {
             ViewData["CopyMessage"] = "Nothing is enabled yet, so there is nowhere to copy to.";
-            return Partial("_CopyResult", this);
+            return this.PartialWithViewData("_CopyResult");
         }
 
         if (string.IsNullOrWhiteSpace(MasterBody))
         {
             ViewData["CopyMessage"] = "The master draft is empty.";
-            return Partial("_CopyResult", this);
+            return this.PartialWithViewData("_CopyResult");
         }
 
         var wouldOverwrite = enabled
@@ -367,7 +367,7 @@ public class ComposeModel(
         if (wouldOverwrite.Count > 0 && !confirmed)
         {
             ViewData["Overwrites"] = wouldOverwrite;
-            return Partial("_CopyConfirm", this);
+            return this.PartialWithViewData("_CopyConfirm");
         }
 
         foreach (var target in enabled)
@@ -377,7 +377,7 @@ public class ComposeModel(
 
         await BuildPanelsAsync(null, cancellationToken);
         ViewData["CopyMessage"] = $"Copied into {enabled.Count} platform{(enabled.Count == 1 ? "" : "s")}.";
-        return Partial("_CopyResult", this);
+        return this.PartialWithViewData("_CopyResult");
     }
 
     /// <summary>Empties the copy result area when the overwrite confirm is dismissed.</summary>
@@ -388,13 +388,15 @@ public class ComposeModel(
     /// on a post that has not been saved yet.
     /// </summary>
     public async Task<IActionResult> OnPostUploadImageAsync(
-        int index, IFormFile? file, CancellationToken cancellationToken)
+        [FromQuery] int index, IFormFile? file, CancellationToken cancellationToken)
     {
         await LoadTimeZoneAsync(cancellationToken);
 
         var userId = currentUser.RequireUserId();
         var user = await db.LoadWithOrganizationAsync(userId, cancellationToken)
                    ?? throw new InvalidOperationException("The signed in user is missing.");
+
+        EnsureTargets();
 
         if (index < 0 || index >= Targets.Count)
         {
@@ -421,9 +423,10 @@ public class ComposeModel(
         return await SlotPartialAsync(index, cancellationToken);
     }
 
-    public async Task<IActionResult> OnPostRemoveImageAsync(int index, CancellationToken cancellationToken)
+    public async Task<IActionResult> OnPostRemoveImageAsync([FromQuery] int index, CancellationToken cancellationToken)
     {
         await LoadTimeZoneAsync(cancellationToken);
+        EnsureTargets();
 
         if (index < 0 || index >= Targets.Count)
         {
@@ -439,7 +442,7 @@ public class ComposeModel(
     {
         await BuildPanelsAsync(null, cancellationToken);
         ViewData["SlotIndex"] = index;
-        return Partial("_ImageSlot", this);
+        return this.PartialWithViewData("_ImageSlot");
     }
 
     private async Task LoadTimeZoneAsync(CancellationToken cancellationToken)
@@ -448,16 +451,32 @@ public class ComposeModel(
         TimeZoneId = user?.TimeZoneId ?? AppTimeZone.Default;
     }
 
+    /// <summary>
+    /// Model binding stops at the first missing index, so a form that only posts some panels
+    /// can arrive short. Fill the list back out in the canonical platform order.
+    /// </summary>
+    private void EnsureTargets()
+    {
+        var byPlatform = new Dictionary<SocialPlatform, TargetInput>();
+        foreach (var target in Targets)
+        {
+            // Model binding produces a sparse list when a form posts only some of the indexes.
+            if (target is not null && target.Platform != default)
+            {
+                byPlatform[target.Platform] = target;
+            }
+        }
+
+        Targets = registry.All
+            .Select(p => byPlatform.GetValueOrDefault(p.Platform) ?? new TargetInput { Platform = p.Platform })
+            .ToList();
+    }
+
     private async Task BuildPanelsAsync(Post? post, CancellationToken cancellationToken)
     {
         var userId = currentUser.RequireUserId();
 
-        if (Targets.Count == 0)
-        {
-            Targets = registry.All
-                .Select(p => new TargetInput { Platform = p.Platform })
-                .ToList();
-        }
+        EnsureTargets();
 
         var imageIds = Targets.Where(t => t.ImageId is not null).Select(t => t.ImageId!.Value).ToList();
         var loaded = imageIds.Count == 0

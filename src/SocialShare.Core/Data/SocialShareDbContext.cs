@@ -20,6 +20,14 @@ public class SocialShareDbContext(DbContextOptions<SocialShareDbContext> options
     public DbSet<StoredImage> StoredImages => Set<StoredImage>();
     public DbSet<PublishLog> PublishLogs => Set<PublishLog>();
 
+    protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+    {
+        base.ConfigureConventions(builder);
+
+        // Covers DateTimeOffset and DateTimeOffset? on every entity. See the converter for why.
+        builder.Properties<DateTimeOffset>().HaveConversion<UtcDateTimeOffsetConverter>();
+    }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

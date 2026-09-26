@@ -31,7 +31,12 @@ public sealed class PublishingService(
     public async Task<bool> TryClaimAsync(Guid postId, PostStatus[] allowedFrom, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
+
+        // The filters are bypassed here because ExecuteUpdate cannot translate them. The post id
+        // has already been resolved through a filtered query by every caller, and the status
+        // predicate is what makes the claim safe.
         var claimed = await db.Posts
+            .IgnoreQueryFilters()
             .Where(p => p.Id == postId && allowedFrom.Contains(p.Status))
             .ExecuteUpdateAsync(
                 s => s.SetProperty(p => p.Status, PostStatus.Publishing)

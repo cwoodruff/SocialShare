@@ -32,7 +32,7 @@ namespace SocialShare.Data.Migrations
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     Plan = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
-                    CreatedUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    CreatedUtc = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -49,11 +49,11 @@ namespace SocialShare.Data.Migrations
                     Title = table.Column<string>(type: "TEXT", maxLength: 300, nullable: false),
                     MasterBody = table.Column<string>(type: "TEXT", nullable: true),
                     Status = table.Column<string>(type: "TEXT", maxLength: 25, nullable: false),
-                    ScheduledUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    PublishedUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    ClaimedUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    CreatedUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    UpdatedUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    ScheduledUtc = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    PublishedUtc = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    ClaimedUtc = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatedUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedUtc = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -70,8 +70,8 @@ namespace SocialShare.Data.Migrations
                     PostTargetId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Platform = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
                     AttemptNumber = table.Column<int>(type: "INTEGER", nullable: false),
-                    StartedUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    CompletedUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
+                    StartedUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CompletedUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
                     Success = table.Column<bool>(type: "INTEGER", nullable: false),
                     HttpStatusCode = table.Column<int>(type: "INTEGER", nullable: true),
                     Message = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true)
@@ -93,14 +93,14 @@ namespace SocialShare.Data.Migrations
                     RemoteAccountId = table.Column<string>(type: "TEXT", maxLength: 400, nullable: true),
                     CredentialsCipher = table.Column<string>(type: "TEXT", nullable: true),
                     TokensCipher = table.Column<string>(type: "TEXT", nullable: true),
-                    TokenExpiresUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
+                    TokenExpiresUtc = table.Column<DateTime>(type: "TEXT", nullable: true),
                     Status = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
-                    LastTestedUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
+                    LastTestedUtc = table.Column<DateTime>(type: "TEXT", nullable: true),
                     LastTestSucceeded = table.Column<bool>(type: "INTEGER", nullable: true),
                     LastError = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true),
                     CharacterLimitOverride = table.Column<int>(type: "INTEGER", nullable: true),
-                    CreatedUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    UpdatedUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    CreatedUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedUtc = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -120,7 +120,7 @@ namespace SocialShare.Data.Migrations
                     ByteSize = table.Column<long>(type: "INTEGER", nullable: false),
                     Width = table.Column<int>(type: "INTEGER", nullable: false),
                     Height = table.Column<int>(type: "INTEGER", nullable: false),
-                    CreatedUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    CreatedUtc = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -156,7 +156,7 @@ namespace SocialShare.Data.Migrations
                     DisplayName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     TimeZoneId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     OrganizationId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    CreatedUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
+                    CreatedUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
@@ -168,7 +168,7 @@ namespace SocialShare.Data.Migrations
                     PhoneNumber = table.Column<string>(type: "TEXT", nullable: true),
                     PhoneNumberConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
                     TwoFactorEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
+                    LockoutEnd = table.Column<DateTime>(type: "TEXT", nullable: true),
                     LockoutEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
                     AccessFailedCount = table.Column<int>(type: "INTEGER", nullable: false)
                 },
@@ -197,11 +197,11 @@ namespace SocialShare.Data.Migrations
                     ImageAltText = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
                     Status = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
                     Attempts = table.Column<int>(type: "INTEGER", nullable: false),
-                    NextAttemptUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
+                    NextAttemptUtc = table.Column<DateTime>(type: "TEXT", nullable: true),
                     RemotePostId = table.Column<string>(type: "TEXT", maxLength: 400, nullable: true),
                     RemoteUrl = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
                     ErrorMessage = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true),
-                    PublishedUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: true)
+                    PublishedUtc = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

@@ -140,7 +140,7 @@ public class IndexModel(
         var card = await BuildCardAsync(platform, cancellationToken);
         ViewData["ConfirmAction"] = action;
         Single = card;
-        return Partial("_AccountConfirm", this);
+        return this.PartialWithViewData("_AccountConfirm");
     }
 
     /// <summary>Re-renders a single card, used to back out of a confirm panel.</summary>
@@ -160,7 +160,7 @@ public class IndexModel(
         Single = await BuildCardAsync(platform, cancellationToken);
         ViewData["CardStatus"] = status;
         ViewData["CardError"] = error;
-        return Partial("_AccountCard", this);
+        return this.PartialWithViewData("_AccountCard");
     }
 
     private string BuildRedirectUri(SocialPlatform platform) =>

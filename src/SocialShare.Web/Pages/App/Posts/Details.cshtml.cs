@@ -56,7 +56,7 @@ public class DetailsModel(
         await publisher.RetryTargetAsync(targetId, cancellationToken);
         await LoadAsync(id, cancellationToken);
 
-        return Request.IsHtmx() ? Partial("_PostResultsPanel", this) : RedirectToPage(new { id });
+        return Request.IsHtmx() ? this.PartialWithViewData("_PostResultsPanel") : RedirectToPage(new { id });
     }
 
     public async Task<IActionResult> OnPostPublishAsync(Guid id, CancellationToken cancellationToken)
@@ -130,7 +130,7 @@ public class DetailsModel(
         }
 
         ViewData["ConfirmAction"] = action;
-        return Partial("_PostConfirm", this);
+        return this.PartialWithViewData("_PostConfirm");
     }
 
     public async Task<IActionResult> OnGetActionsAsync(Guid id, CancellationToken cancellationToken)
@@ -140,7 +140,7 @@ public class DetailsModel(
             return NotFound();
         }
 
-        return Partial("_PostActions", this);
+        return this.PartialWithViewData("_PostActions");
     }
 
     private async Task<bool> LoadAsync(Guid id, CancellationToken cancellationToken)

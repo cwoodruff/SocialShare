@@ -50,7 +50,7 @@ public class IndexModel(
         await LoadAsync(cancellationToken);
 
         // The filter form posts with htmx and only the results table is swapped back.
-        return Request.IsHtmx() ? Partial("_PostResults", this) : Page();
+        return Request.IsHtmx() ? this.PartialWithViewData("_PostResults") : Page();
     }
 
     private async Task LoadAsync(CancellationToken cancellationToken)

@@ -11,7 +11,7 @@ using SocialShare.Core.Data;
 namespace SocialShare.Data.Migrations
 {
     [DbContext(typeof(SocialShareDbContext))]
-    [Migration("20260926140257_InitialSchema")]
+    [Migration("20260926140636_InitialSchema")]
     partial class InitialSchema
     {
         /// <inheritdoc />
@@ -159,7 +159,7 @@ namespace SocialShare.Data.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("CreatedUtc")
+                    b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("DisplayName")
@@ -177,7 +177,7 @@ namespace SocialShare.Data.Migrations
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset?>("LockoutEnd")
+                    b.Property<DateTime?>("LockoutEnd")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("NormalizedEmail")
@@ -235,7 +235,7 @@ namespace SocialShare.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("CreatedUtc")
+                    b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -259,10 +259,10 @@ namespace SocialShare.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset?>("ClaimedUtc")
+                    b.Property<DateTime?>("ClaimedUtc")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("CreatedUtc")
+                    b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("MasterBody")
@@ -271,10 +271,10 @@ namespace SocialShare.Data.Migrations
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset?>("PublishedUtc")
+                    b.Property<DateTime?>("PublishedUtc")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset?>("ScheduledUtc")
+                    b.Property<DateTime?>("ScheduledUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
@@ -287,7 +287,7 @@ namespace SocialShare.Data.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("UpdatedUtc")
+                    b.Property<DateTime>("UpdatedUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("UserId")
@@ -329,7 +329,7 @@ namespace SocialShare.Data.Migrations
                     b.Property<Guid?>("ImageId")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset?>("NextAttemptUtc")
+                    b.Property<DateTime?>("NextAttemptUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Platform")
@@ -340,7 +340,7 @@ namespace SocialShare.Data.Migrations
                     b.Property<Guid>("PostId")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset?>("PublishedUtc")
+                    b.Property<DateTime?>("PublishedUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("RemotePostId")
@@ -379,7 +379,7 @@ namespace SocialShare.Data.Migrations
                     b.Property<int>("AttemptNumber")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset>("CompletedUtc")
+                    b.Property<DateTime>("CompletedUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("HttpStatusCode")
@@ -400,7 +400,7 @@ namespace SocialShare.Data.Migrations
                     b.Property<Guid>("PostTargetId")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("StartedUtc")
+                    b.Property<DateTime>("StartedUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("Success")
@@ -425,7 +425,7 @@ namespace SocialShare.Data.Migrations
                     b.Property<int?>("CharacterLimitOverride")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset>("CreatedUtc")
+                    b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CredentialsCipher")
@@ -442,7 +442,7 @@ namespace SocialShare.Data.Migrations
                     b.Property<bool?>("LastTestSucceeded")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset?>("LastTestedUtc")
+                    b.Property<DateTime?>("LastTestedUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("OrganizationId")
@@ -462,13 +462,13 @@ namespace SocialShare.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset?>("TokenExpiresUtc")
+                    b.Property<DateTime?>("TokenExpiresUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("TokensCipher")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("UpdatedUtc")
+                    b.Property<DateTime>("UpdatedUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("UserId")
@@ -496,7 +496,7 @@ namespace SocialShare.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("CreatedUtc")
+                    b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Height")

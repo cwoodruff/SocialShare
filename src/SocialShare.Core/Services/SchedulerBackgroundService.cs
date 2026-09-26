@@ -143,7 +143,10 @@ public sealed class SchedulerBackgroundService(
         var cutoff = DateTimeOffset.UtcNow - TimeSpan.FromMinutes(_options.StuckClaimMinutes);
         using var scope = CreateSystemScope(out var db);
 
+        // Query filters are bypassed because ExecuteUpdate cannot translate them. The worker is
+        // already running as the system across every tenant.
         var released = await db.Posts
+            .IgnoreQueryFilters()
             .Where(p => p.Status == PostStatus.Publishing && p.ClaimedUtc != null && p.ClaimedUtc < cutoff)
             .ExecuteUpdateAsync(
                 s => s.SetProperty(p => p.Status, PostStatus.Scheduled).SetProperty(p => p.ClaimedUtc, (DateTimeOffset?)null),
@@ -167,6 +170,7 @@ public sealed class SchedulerBackgroundService(
 
         using var scope = CreateSystemScope(out var db);
         var deleted = await db.Posts
+            .IgnoreQueryFilters()
             .Where(p => p.Status == PostStatus.Published && p.PublishedUtc != null && p.PublishedUtc < cutoff)
             .ExecuteDeleteAsync(cancellationToken);
 
