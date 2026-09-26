@@ -13,10 +13,15 @@ public interface ISocialPlatform
     PlatformCapabilities Capabilities { get; }
 
     /// <summary>
-    /// Builds the URL the browser is sent to for authorization. Only called when
-    /// <see cref="PlatformCapabilities.AuthKind"/> is one of the OAuth kinds.
+    /// Works out where to send the browser for authorization. It is async because one platform
+    /// has to register this app with the user's chosen server first, and that registration
+    /// hands back credentials the caller must store.
     /// </summary>
-    Uri BuildAuthorizationUrl(SocialAccount account, IReadOnlyDictionary<string, string> credentials, OAuthStartContext context);
+    Task<PlatformAuthorizationStart> StartAuthorizationAsync(
+        SocialAccount account,
+        IReadOnlyDictionary<string, string> credentials,
+        OAuthStartContext context,
+        CancellationToken cancellationToken);
 
     /// <summary>Exchanges an authorization code for tokens.</summary>
     Task<PlatformConnectResult> CompleteAuthorizationAsync(

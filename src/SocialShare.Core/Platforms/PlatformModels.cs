@@ -51,6 +51,15 @@ public sealed record PlatformCapabilities
     public required string Summary { get; init; }
 }
 
+/// <summary>
+/// Where to send the browser, plus any credentials the platform generated on the way that have
+/// to be saved before the callback comes back.
+/// </summary>
+public sealed record PlatformAuthorizationStart(
+    Uri? AuthorizationUrl,
+    IReadOnlyDictionary<string, string>? UpdatedCredentials = null,
+    string? Error = null);
+
 public sealed record PlatformConnectResult(
     bool Success,
     string? DisplayName = null,
