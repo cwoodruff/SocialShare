@@ -37,13 +37,9 @@
         <p class="notice notice--error">@Model.ErrorMessage</p>
     }
 
-    <div id="post-actions">
-        <partial name="_PostActions" model="Model" />
-    </div>
-
-    <div id="post-results-panel">
-        <partial name="_PostResultsPanel" model="Model" />
-    </div>
+    @* Each partial carries its own id, which is what the htmx outerHTML swaps target. *@
+    <partial name="_PostActions" model="Model" />
+    <partial name="_PostResultsPanel" model="Model" />
 
     @if (Model.Logs.Count > 0)
     {
