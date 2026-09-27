@@ -211,6 +211,16 @@ In the repository, Settings, Secrets and variables, Actions.
 |---|---|
 | `AZURE_WEBAPP_NAME` | the `$APP` name, for example `socialshare-woody` |
 
+**Set `AZURE_WEBAPP_NAME` last.** It is the switch that turns deployment on. The deploy job is
+gated on it, so until it exists the job is skipped and a push to `main` just builds and tests.
+That keeps the workflow green while Azure is still being set up, rather than failing every push
+on a login it cannot do yet.
+
+The gate is a variable rather than a secret because the `secrets` context is not available in a
+job level `if`. The job checks that the three secrets are present as its first step and names any
+that are missing, so a half finished setup says what is wrong instead of failing inside
+`azure/login`.
+
 None of those three secrets is a credential. They are identifiers. The credential is the OIDC
 token GitHub mints per run, which lives for minutes.
 
@@ -240,6 +250,9 @@ URI, or the OAuth flows break with a mismatch.
 
 Push to `main`. The workflow restores, builds, tests, publishes and deploys, then polls
 `/health` until it answers 200 or gives up after five minutes.
+
+If the deploy job shows as skipped, `AZURE_WEBAPP_NAME` is not set. That is the gate described
+above, not a failure.
 
 Pull requests run restore, build and test only. They never touch Azure.
 

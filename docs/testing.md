@@ -163,5 +163,6 @@ dotnet test --filter "Scheduler"
 ## In CI
 
 `.github/workflows/build-test-deploy.yml` runs restore, build and test on every pull request, and
-again on a push to `main` before it publishes. The build has `TreatWarningsAsErrors` on, so a
+again on a push to `main` before it publishes. The deploy job is skipped until the
+`AZURE_WEBAPP_NAME` variable exists, so the workflow stays green before Azure is set up. The build has `TreatWarningsAsErrors` on, so a
 warning fails the run. Test results are uploaded as a `.trx` artifact either way.

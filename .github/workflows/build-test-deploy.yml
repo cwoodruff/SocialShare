@@ -66,7 +66,16 @@ jobs:
   deploy:
     name: Deploy to Azure App Service
     needs: build-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    # Skipped until Azure is set up. The secrets context is not available in a job level if,
+    # so this gates on the one variable the deploy cannot run without. Set AZURE_WEBAPP_NAME
+    # last, once the secrets are in place, and this job starts running. Until then it shows as
+    # skipped rather than failing every push. See docs/azure-deployment.md.
+    if: >-
+      github.event_name == 'push'
+      && github.ref == 'refs/heads/main'
+      && vars.AZURE_WEBAPP_NAME != ''
+
     runs-on: ubuntu-latest
     environment: production
 
@@ -77,6 +86,30 @@ jobs:
       contents: read
 
     steps:
+      # azure/login fails with "Not all values are present" when a secret is missing, which does
+      # not say which one. Check first and name it.
+      - name: Check the Azure credentials are present
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          missing=""
+          for name in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
+            eval "value=\$$name"
+            if [ -z "$value" ]; then
+              missing="$missing $name"
+            fi
+          done
+
+          if [ -n "$missing" ]; then
+            echo "::error::AZURE_WEBAPP_NAME is set, so this job ran, but these repository secrets are missing or empty:$missing"
+            echo "::error::Add them under Settings, Secrets and variables, Actions. See docs/azure-deployment.md."
+            exit 1
+          fi
+
+          echo "All three Azure credentials are present."
+
       - name: Download publish output
         uses: actions/download-artifact@v4
         with:
