@@ -59,6 +59,21 @@ That means a new deployment has nobody in it and no way to sign up. Open registr
 enough to create your own account, then close it again. The sequence is in
 [docs/operations.md](docs/operations.md#creating-the-first-account).
 
+### If the build suddenly fails with Razor errors
+
+If `dotnet build` starts reporting errors in `.cshtml` files that you did not touch, especially
+`RZ1021` about markup in a code block, or `The name 'odel' does not exist`, the code is almost
+certainly fine. The Roslyn compiler server, `VBCSCompiler`, occasionally gets into a state where
+the Razor source generator mis-parses markup inside `@if` and `@foreach` blocks, and every build
+routed through that process fails identically until it exits.
+
+```
+dotnet build-server shutdown
+```
+
+That clears it. The tell is that the same commit builds fine in a container or in CI, and that
+`UseSharedCompilation=false dotnet build` succeeds while a plain `dotnet build` does not.
+
 ## Running the tests
 
 ```
