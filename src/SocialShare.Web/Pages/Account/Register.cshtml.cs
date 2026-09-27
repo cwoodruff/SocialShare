@@ -101,11 +101,13 @@ public class RegisterModel(
 
         logger.LogInformation("Registered {Email}.", Input.Email);
 
-        await confirmationEmail.SendAsync(user, this, cancellationToken);
+        var emailSent = await confirmationEmail.TrySendAsync(user, this, cancellationToken);
 
         if (_app.RequireConfirmedAccount)
         {
-            return RedirectToPage("/Account/ConfirmEmailSent", new { email = Input.Email });
+            // The account exists either way. If the email could not go out, the next page says
+            // so rather than telling somebody to check an inbox that will stay empty.
+            return RedirectToPage("/Account/ConfirmEmailSent", new { email = Input.Email, sent = emailSent });
         }
 
         await signInManager.SignInAsync(user, isPersistent: false);

@@ -79,9 +79,9 @@ The query filters are good. They are not the whole job.
 The uncomfortable one. The moment anyone can sign up, this is a tool for posting to many
 platforms at once on a schedule, which is also a description of a spam tool.
 
-- Email confirmation is enforced and sign ups are closed by default, which is most of this
-  already. What is missing is a real email provider configured by default, because a
-  confirmation link that only exists in the application log is not a sign up flow.
+- Email confirmation is enforced, sign ups are closed by default, and SendGrid is wired up, so
+  this one is mostly done. What is left is operational: a bounce and complaint webhook, so a
+  repeatedly bouncing address gets flagged rather than silently failing forever.
 - A hold on new accounts before they can publish, or a low first week limit.
 - Content rate limits per organization, not just request rate limits.
 - A kill switch: suspend an organization, stop its scheduler, keep the data.

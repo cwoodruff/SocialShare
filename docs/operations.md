@@ -56,7 +56,7 @@ system. That is a deliberate omission rather than an oversight: an invite flow i
 this has one user.
 
 If you configure a real email provider, steps 2 and 3 collapse into "register and click the link
-in your inbox" and you never touch the log.
+in your inbox" and you never touch the log. See [email-setup.md](email-setup.md).
 
 ### If you get locked out
 
@@ -177,6 +177,9 @@ wire up Application Insights or ship to a Log Analytics workspace.
 | `Publishing post {PostId} to {Platform} failed on attempt {N}: ...` | It did not. The full platform response is in the message. |
 | `Released {N} post(s) that were stuck in Publishing.` | Something died mid publish and the post is being tried again. |
 | `Could not decrypt a stored secret.` | The key ring changed or was lost. Accounts need reconnecting. |
+| `Account email goes through SendGrid as ...` | Email is configured and will actually send. |
+| `Account email is not being sent.` | Email:Provider is Log. A warning when confirmation is required, because then nobody can register. |
+| `Could not send the confirmation link to ...` | SendGrid refused it. The reason is on the same line. See docs/email-setup.md. |
 | `Database migration failed.` | The app refused to start rather than run against a half migrated database. |
 | `The image root {Root} is not writable.` | The file share is read only or full. `/health` is failing too. |
 

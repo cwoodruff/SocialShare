@@ -18,7 +18,12 @@ public sealed class ConfirmationEmail(
     IAppEmailSender email,
     ILogger<ConfirmationEmail> logger)
 {
-    public async Task SendAsync(
+    /// <summary>
+    /// Returns false when the provider refused the message. The caller decides what to say
+    /// about that: the account already exists either way, so throwing would leave the person
+    /// looking at a 500 with an account they cannot get into.
+    /// </summary>
+    public async Task<bool> TrySendAsync(
         ApplicationUser user,
         PageModel page,
         CancellationToken cancellationToken)
@@ -32,15 +37,35 @@ public sealed class ConfirmationEmail(
             values: new { userId = user.Id, code = encoded },
             protocol: page.Request.Scheme)!;
 
-        await email.SendAsync(
-            user.Email!,
-            "Confirm your SocialShare account",
-            $"""
-             <p>Confirm your SocialShare account by <a href="{HtmlEncoder.Default.Encode(link)}">clicking here</a>.</p>
-             <p>If you did not create this account, ignore this message.</p>
-             """,
-            cancellationToken);
+        var message = new EmailMessage(
+            To: user.Email!,
+            Subject: "Confirm your SocialShare account",
+            HtmlBody: $"""
+                       <p>Confirm your SocialShare account by <a href="{HtmlEncoder.Default.Encode(link)}">clicking here</a>.</p>
+                       <p>If the link does not work, paste this into your browser:</p>
+                       <p>{HtmlEncoder.Default.Encode(link)}</p>
+                       <p>If you did not create this account, ignore this message.</p>
+                       """,
+            TextBody: $"""
+                       Confirm your SocialShare account by opening this link:
 
-        logger.LogInformation("Sent a confirmation link to {Email}.", user.Email);
+                       {link}
+
+                       If you did not create this account, ignore this message.
+                       """);
+
+        try
+        {
+            await email.SendAsync(message, cancellationToken);
+            logger.LogInformation("Sent a confirmation link to {Email}.", user.Email);
+            return true;
+        }
+        catch (EmailSendException ex)
+        {
+            // Loud, because with confirmation required this is the difference between an
+            // account that works and one that can never sign in.
+            logger.LogError(ex, "Could not send the confirmation link to {Email}.", user.Email);
+            return false;
+        }
     }
 }

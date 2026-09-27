@@ -4,7 +4,7 @@
 dotnet test
 ```
 
-77 tests, about five seconds. No database server, no network, no fixtures to install.
+92 tests, about five seconds. No database server, no network, no fixtures to install.
 
 ## What is covered
 
@@ -18,6 +18,7 @@ dotnet test
 | The atomic claim on SQLite | `SchedulerClaimTests.cs` | 2 |
 | Tenant isolation, end to end | `TenantIsolationTests.cs` | 2 |
 | Registration and email confirmation gates | `AccountGateTests.cs` | 5 |
+| The SendGrid sender and provider selection | `EmailSenderTests.cs` | 15 |
 
 ## How the platforms are tested
 
@@ -129,6 +130,27 @@ On that last point, I did verify the full Bluesky path against a local AT Protoc
 server during development: connect, test, schedule, the worker claiming and publishing, a blob
 upload, computed facets, and a manual retry after a failure. That is not in the committed suite
 because it needs a second process, but it is how the reference platform was proven.
+
+## How the email sender is tested
+
+`SendGridClient` takes an `HttpClient`, so `SendGridEmailSenderTests` puts the same stub handler
+underneath it and reads the exact JSON SendGrid would have received. No network, no API key.
+
+It asserts the things that are invisible until they are wrong in production: that both a plain
+text and an HTML part are sent and in that order, that the from address and name are the
+configured ones, that the reply-to appears only when configured, that sandbox mode reaches the
+payload, and that click and open tracking are off. That last one matters more than it looks.
+With click tracking on, SendGrid rewrites the confirmation URL into a redirect through its own
+domain, which reads as phishing to a recipient and to a spam filter, and there is no way to
+notice from inside the app.
+
+It also asserts both failure shapes: a refused message and a dead socket each raise
+`EmailSendException` carrying what actually went wrong, rather than returning quietly.
+
+`EmailOptionsTests` covers provider selection, including that an unrecognised provider name
+throws instead of falling back to the logger. That fallback used to be the behaviour, and with
+email confirmation required it meant a typo in configuration turned into nobody being able to
+register, with no error anywhere.
 
 ## Running a subset
 

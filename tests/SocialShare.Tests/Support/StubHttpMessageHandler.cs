@@ -52,6 +52,16 @@ public sealed class StubHttpMessageHandler : HttpMessageHandler
         return this;
     }
 
+    /// <summary>Simulates the socket failing, rather than the server answering badly.</summary>
+    public StubHttpMessageHandler Throw(string uriContains, Exception exception)
+    {
+        _rules.Add((
+            request => request.RequestUri!.ToString().Contains(uriContains, StringComparison.OrdinalIgnoreCase),
+            _ => throw exception));
+
+        return this;
+    }
+
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request, CancellationToken cancellationToken)
     {

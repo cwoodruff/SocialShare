@@ -1,20 +1,36 @@
 @page "/check-your-email"
 @model SocialShare.Web.Pages.Account.ConfirmEmailSentModel
 @{
-    ViewData["Title"] = "Check your email";
+    ViewData["Title"] = Model.Sent ? "Check your email" : "Your account was created";
 }
 
 <div class="auth card stack">
-    <h1>Check your email</h1>
-    <p class="muted">
-        A confirmation link is on its way to <strong>@Model.Email</strong>. Click it and then sign in.
-    </p>
-    <p class="small muted">
-        In development the link is written to the server log instead of being emailed, so look
-        in the console window running the app.
-    </p>
+    @if (Model.Sent)
+    {
+        <h1>Check your email</h1>
+        <p class="muted">
+            A confirmation link is on its way to <strong>@Model.Email</strong>. Click it and then sign in.
+        </p>
+        <p class="small muted">
+            Nothing arriving? Check the spam folder. In development the link is written to the
+            server log instead of being emailed, so look in the console window running the app.
+        </p>
+    }
+    else
+    {
+        <h1>Your account was created</h1>
+        <p class="notice notice--warn">
+            The account for <strong>@Model.Email</strong> exists, but the confirmation email could
+            not be sent. That is a problem with this instance, not with anything you did.
+        </p>
+        <p class="small muted">
+            Try sending it again in a minute. If it keeps failing, whoever runs this instance
+            needs to look at the server log, which has the reason.
+        </p>
+    }
+
     <div class="row">
         <a class="btn" href="/login">Back to sign in</a>
-        <a class="btn btn--quiet" href="/resend-confirmation">Send it again</a>
+        <a class="btn @(Model.Sent ? "btn--quiet" : "btn--primary")" href="/resend-confirmation">Send it again</a>
     </div>
 </div>

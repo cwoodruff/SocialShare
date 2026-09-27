@@ -42,7 +42,10 @@ public class ResendConfirmationModel(
             return Page();
         }
 
-        await confirmationEmail.SendAsync(user, this, cancellationToken);
+        // The result is deliberately not shown. Saying "that failed" only when the address
+        // exists would turn this page into a way to find out which addresses have accounts.
+        // A failure is logged instead, which is the operator's problem, not the visitor's.
+        await confirmationEmail.TrySendAsync(user, this, cancellationToken);
         return Page();
     }
 }

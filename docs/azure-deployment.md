@@ -108,18 +108,24 @@ confirmation email. With `Email__Provider` left at `Log` that link only exists i
 log, which is workable for one person but is the reason to configure a real provider if anyone
 else is ever going to use this.
 
-If you want real email:
+If you want real email, which you do as soon as anybody other than you needs an account:
 
 ```bash
 az webapp config appsettings set --name $APP --resource-group $RG --settings \
   Email__Provider=SendGrid \
   Email__SendGridApiKey="SG.xxxx" \
   Email__FromAddress="no-reply@yourdomain.com" \
-  Email__FromName="SocialShare"
+  Email__FromName="SocialShare" \
+  Email__ReplyToAddress="you@yourdomain.com"
 ```
 
+The from address has to be one you have verified with SendGrid or every message is refused, and
+setting `Email__Provider` to SendGrid without a key stops the app at startup rather than falling
+back to the log. [email-setup.md](email-setup.md) covers the SendGrid side and how to prove it
+works from the admin page.
+
 Leave `Email__Provider` at `Log` and confirmation links are written to the application log
-instead, which is fine for a single user.
+instead, which is workable for a single user and nothing else.
 
 ## 4. Health check
 

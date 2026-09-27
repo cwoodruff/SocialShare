@@ -46,7 +46,8 @@ Every other platform needs a developer app you register yourself.
 
 Email is not sent in development. Confirmation and password reset links are written to the
 console instead, so look in the window running the app. If you lose one,
-`/resend-confirmation` sends another.
+`/resend-confirmation` sends another. To send real mail, see
+[docs/email-setup.md](docs/email-setup.md).
 
 ### Sign ups are closed by default
 
@@ -83,7 +84,10 @@ Everything has a working default. These are the ones I actually change.
 | `App:AdminEmails` | `[]` | Emails that get the admin role on the next start. |
 | `Scheduler:PollSeconds` | `15` | How often the worker looks for due posts. |
 | `Retention:PurgeEnabled` | `false` | Turn on to delete published posts after N days. |
-| `Email:Provider` | `Log` | Set to `SendGrid` and add `Email:SendGridApiKey` to send real mail. |
+| `Email:Provider` | `Log` | `Log` writes messages to the log. `SendGrid` actually sends. Anything else stops the app. |
+| `Email:SendGridApiKey` | empty | A SendGrid API key with Mail Send permission. Required when the provider is SendGrid. |
+| `Email:FromAddress` | `no-reply@socialshare.local` | Must be on a sender identity you verified with SendGrid. |
+| `Email:SandboxMode` | `false` | Ask SendGrid to validate every message and deliver none of them. |
 
 Use user secrets locally and App Service application settings in Azure. Nothing secret belongs
 in a config file in the repo.
@@ -92,6 +96,7 @@ in a config file in the repo.
 
 - [Architecture](docs/architecture.md), including the diagrams and why the projects are split the way they are
 - [Decision records](docs/adr/)
+- [Email setup](docs/email-setup.md), getting SendGrid sending
 - [Platform setup](docs/platform-setup.md), one section per platform
 - [Azure deployment](docs/azure-deployment.md)
 - [Operations](docs/operations.md), backups, key rotation, logs and common failures

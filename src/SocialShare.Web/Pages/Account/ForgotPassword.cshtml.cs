@@ -12,7 +12,8 @@ namespace SocialShare.Web.Pages.Account;
 
 public class ForgotPasswordModel(
     UserManager<ApplicationUser> userManager,
-    IAppEmailSender email) : PageModel
+    IAppEmailSender email,
+    ILogger<ForgotPasswordModel> logger) : PageModel
 {
     [BindProperty]
     [Required(ErrorMessage = "An email address is required.")]
@@ -44,11 +45,34 @@ public class ForgotPasswordModel(
         var encoded = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
         var link = Url.Page("/Account/ResetPassword", null, new { code = encoded }, Request.Scheme)!;
 
-        await email.SendAsync(
-            Email,
-            "Reset your SocialShare password",
-            $"""<p>Reset your password by <a href="{HtmlEncoder.Default.Encode(link)}">clicking here</a>. Ignore this if you did not ask for it.</p>""",
-            cancellationToken);
+        var message = new EmailMessage(
+            To: Email,
+            Subject: "Reset your SocialShare password",
+            HtmlBody: $"""
+                       <p>Reset your SocialShare password by <a href="{HtmlEncoder.Default.Encode(link)}">clicking here</a>.</p>
+                       <p>If the link does not work, paste this into your browser:</p>
+                       <p>{HtmlEncoder.Default.Encode(link)}</p>
+                       <p>If you did not ask for this, ignore the message. Your password has not changed.</p>
+                       """,
+            TextBody: $"""
+                       Reset your SocialShare password by opening this link:
+
+                       {link}
+
+                       If you did not ask for this, ignore the message. Your password has not changed.
+                       """);
+
+        try
+        {
+            await email.SendAsync(message, cancellationToken);
+        }
+        catch (EmailSendException ex)
+        {
+            // Same reasoning as the resend page: reporting the failure only when the address
+            // exists would turn this into a way to discover which addresses have accounts.
+            // The operator finds out from the log.
+            logger.LogError(ex, "Could not send a password reset link to {Email}.", Email);
+        }
 
         return Page();
     }

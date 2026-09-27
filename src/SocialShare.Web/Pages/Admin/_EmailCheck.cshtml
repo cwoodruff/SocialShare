@@ -1,0 +1,68 @@
+@model SocialShare.Web.Pages.Admin.IndexModel
+@{
+    var provider = Model.Email.Provider;
+    var isSendGrid = string.Equals(provider, nameof(EmailProvider.SendGrid), StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="card stack-sm" id="email-check">
+    <div class="card__header">
+        <h2 style="display:flex;align-items:center;gap:.5rem;">
+            Account email
+            @if (isSendGrid)
+            {
+                <span class="badge badge--success">@provider</span>
+            }
+            else
+            {
+                <span class="badge badge--warn">@provider</span>
+            }
+            @if (Model.Email.SandboxMode)
+            {
+                <span class="badge badge--info">Sandbox</span>
+            }
+        </h2>
+    </div>
+
+    @if (!isSendGrid)
+    {
+        <p class="notice notice--warn">
+            Nothing is being sent. Confirmation and password reset links are written to the server
+            log instead, which works for one person and does not work for anybody else.
+            <a href="https://github.com/cwoodruff/SocialShare/blob/main/docs/email-setup.md" rel="noopener">Set up SendGrid</a>.
+        </p>
+    }
+
+    <dl class="small" style="margin:0;">
+        <dt class="muted">From</dt>
+        <dd style="margin:0 0 var(--space-3);">
+            @Model.Email.FromName &lt;@Model.Email.FromAddress&gt;
+        </dd>
+        @if (!string.IsNullOrWhiteSpace(Model.Email.ReplyToAddress))
+        {
+            <dt class="muted">Reply to</dt>
+            <dd style="margin:0 0 var(--space-3);">@Model.Email.ReplyToAddress</dd>
+        }
+        <dt class="muted">API key</dt>
+        <dd style="margin:0;">
+            @(string.IsNullOrWhiteSpace(Model.Email.SendGridApiKey) ? "not set" : "set")
+        </dd>
+    </dl>
+
+    @if (Model.EmailResult is not null)
+    {
+        <p class="notice @(Model.EmailResultOk ? "notice--success" : "notice--error")">@Model.EmailResult</p>
+    }
+
+    <div class="row">
+        <button type="button"
+                class="btn"
+                hx-post="?handler=TestEmail"
+                hx-target="#email-check"
+                hx-swap="outerHTML"
+                hx-indicator="#email-test-spinner"
+                @(Model.MyEmail is null ? "disabled" : "")>
+            Send a test email@(Model.MyEmail is null ? "" : " to " + Model.MyEmail)
+        </button>
+        <span id="email-test-spinner" class="htmx-indicator small muted">Sending</span>
+    </div>
+</div>

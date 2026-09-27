@@ -73,15 +73,39 @@ builder.Services.AddScoped<ConfirmationEmail>();
 // the layout puts on the body element once per page.
 builder.Services.AddAntiforgery(options => options.HeaderName = "RequestVerificationToken");
 
+// Picking the email provider. A misconfiguration stops the app instead of quietly falling
+// back to the logger, because with confirmation required a silent fallback means nobody can
+// finish registering and the only clue is an inbox that stays empty.
 var emailOptions = builder.Configuration.GetSection(EmailOptions.SectionName).Get<EmailOptions>() ?? new EmailOptions();
-if (string.Equals(emailOptions.Provider, "SendGrid", StringComparison.OrdinalIgnoreCase)
-    && !string.IsNullOrWhiteSpace(emailOptions.SendGridApiKey))
+
+switch (emailOptions.ResolveProvider())
 {
-    builder.Services.AddScoped<IAppEmailSender, SendGridEmailSender>();
-}
-else
-{
-    builder.Services.AddScoped<IAppEmailSender, LogEmailSender>();
+    case EmailProvider.SendGrid:
+        if (string.IsNullOrWhiteSpace(emailOptions.SendGridApiKey))
+        {
+            throw new InvalidOperationException(
+                "Email:Provider is SendGrid but Email:SendGridApiKey is empty. Set the key, or set "
+                + "Email:Provider to Log. See docs/email-setup.md.");
+        }
+
+        if (string.IsNullOrWhiteSpace(emailOptions.FromAddress)
+            || emailOptions.FromAddress.EndsWith("@socialshare.local", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Email:Provider is SendGrid but Email:FromAddress is still '{emailOptions.FromAddress}'. "
+                + "It has to be an address on a sender identity you have verified with SendGrid, or "
+                + "SendGrid rejects every message. See docs/email-setup.md.");
+        }
+
+        builder.Services.AddHttpClient(SendGridEmailSender.HttpClientName, client =>
+            client.Timeout = TimeSpan.FromSeconds(Math.Clamp(emailOptions.TimeoutSeconds, 5, 120)));
+
+        builder.Services.AddScoped<IAppEmailSender, SendGridEmailSender>();
+        break;
+
+    default:
+        builder.Services.AddScoped<IAppEmailSender, LogEmailSender>();
+        break;
 }
 
 builder.Services.AddHttpClient(PlatformBase.HttpClientName, client =>
@@ -146,6 +170,8 @@ var app = builder.Build();
 // against a half migrated database.
 await MigrateAsync(app);
 
+LogEmailConfiguration(app, emailOptions);
+
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -196,6 +222,38 @@ app.MapGet("/i/{**storageKey}", async (
 }).AllowAnonymous();
 
 app.Run();
+
+/// <summary>
+/// Says which way the email configuration went, once, at startup. Whether account email works
+/// is not something anybody should have to discover by registering.
+/// </summary>
+static void LogEmailConfiguration(WebApplication app, EmailOptions options)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+
+    if (options.ResolveProvider() == EmailProvider.SendGrid)
+    {
+        logger.LogInformation(
+            "Account email goes through SendGrid as {From}.{Sandbox}",
+            options.FromAddress,
+            options.SandboxMode
+                ? " Email:SandboxMode is on, so SendGrid validates every message and delivers none of them."
+                : string.Empty);
+
+        return;
+    }
+
+    var required = app.Services.GetRequiredService<IOptions<AppOptions>>().Value.RequireConfirmedAccount;
+
+    logger.Log(
+        required ? LogLevel.Warning : LogLevel.Information,
+        "Account email is not being sent. Email:Provider is Log, so confirmation and password "
+        + "reset links are written to this log instead.{Consequence}",
+        required
+            ? " App:RequireConfirmedAccount is on, so a new account cannot sign in until somebody "
+              + "finds its link in here. See docs/email-setup.md."
+            : string.Empty);
+}
 
 static async Task MigrateAsync(WebApplication app)
 {

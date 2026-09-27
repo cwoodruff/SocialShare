@@ -28,8 +28,24 @@ public interface ISecretProtector
     string? Unprotect(string? ciphertext);
 }
 
+/// <summary>
+/// One account email. Both bodies are required: a transactional message with no plain text part
+/// scores worse with spam filters, and the confirmation link is the whole point of the message,
+/// so it needs to survive a client that will not render HTML.
+/// </summary>
+public sealed record EmailMessage(string To, string Subject, string HtmlBody, string TextBody);
+
 /// <summary>Sends account mail. The stub logs, SendGrid sends, chosen by configuration.</summary>
 public interface IAppEmailSender
 {
-    Task SendAsync(string toEmail, string subject, string htmlBody, CancellationToken cancellationToken);
+    /// <summary>
+    /// Sends the message, or throws <see cref="EmailSendException"/>. It deliberately does not
+    /// return a status that a caller can ignore: a confirmation email that silently fails to
+    /// send strands the account it belongs to, because signing in needs it.
+    /// </summary>
+    Task SendAsync(EmailMessage message, CancellationToken cancellationToken);
 }
+
+/// <summary>The provider refused the message, or could not be reached.</summary>
+public sealed class EmailSendException(string message, Exception? inner = null)
+    : Exception(message, inner);
