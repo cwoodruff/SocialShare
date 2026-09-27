@@ -45,7 +45,7 @@ az webapp create \
   --runtime "DOTNETCORE:10.0"
 ```
 
-## 2. Turn on Always On and stop overlapped recycling
+## 2. Turn on Always On, require HTTPS and stop overlapped recycling
 
 ```bash
 az webapp config set \
@@ -59,6 +59,19 @@ az webapp config set \
 Always On stops App Service unloading the site after twenty minutes idle. Without it the
 `BackgroundService` stops with the process and nothing publishes until somebody visits the site.
 That is the single most important setting on this page.
+
+`--min-tls-version` sets the floor for connections that already arrived over TLS. It does not
+turn plain HTTP away, so do that separately. It is a different command, on the site rather than
+its config:
+
+```bash
+az webapp update --name $APP --resource-group $RG --https-only true
+```
+
+Without it the site answers on `http://` as well, and the authentication cookie can go out over
+a connection nobody encrypted. With it, App Service answers plain HTTP with a 301 to the same
+URL on `https://` and the app is never reached. Check it with
+`curl -I http://$APP.azurewebsites.net/`.
 
 Then stop App Service briefly running two processes during a deployment, which two SQLite writers
 would not survive:
