@@ -106,27 +106,42 @@ You confirmed nothing, registration is closed, and you cannot sign in. Two ways 
 
 ### Manual, and good enough
 
+Kudu streams `/home/data` as a zip, which is the whole of the state: the database, the uploads
+and the Data Protection key ring. Stop the app first.
+
 ```bash
 RG=socialshare-rg
 APP=socialshare-woody
 STAMP=$(date +%Y%m%d-%H%M%S)
 
-# Put the app into a quiet state first. SQLite will happily be copied mid write, and a
-# mid write copy is how you get a backup that looks fine and restores broken.
+# Stop first. SQLite will happily be copied mid write, and a mid write copy is how you get a
+# backup that looks fine and restores broken. Stopping also checkpoints the write ahead log
+# into the .db, so what you get is one consistent file rather than a .db plus a -wal you have
+# to remember to keep together.
 az webapp stop --name $APP --resource-group $RG
 
-az webapp deploy --name $APP --resource-group $RG --type zip --src-path /dev/null 2>/dev/null || true
+TOKEN=$(az account get-access-token --resource https://management.azure.com \
+  --query accessToken -o tsv)
 
-# Pull the whole /home share down.
-az webapp config backup list --resource-group $RG --webapp-name $APP
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://$APP.scm.azurewebsites.net/api/zip/data/" \
+  -o "socialshare-$STAMP.zip"
 
 az webapp start --name $APP --resource-group $RG
+
+# Prove it before you trust it. An empty or truncated download still exits 0.
+unzip -l "socialshare-$STAMP.zip"
 ```
 
-In practice the simplest reliable route is the Kudu console. Browse to
-`https://YOUR-APP.scm.azurewebsites.net/api/zip/home/data/` and it streams the whole `data`
-folder as a zip. Do that with the site stopped, or after the daily quiet period, and store the
-zip somewhere that is not Azure.
+The path is `/api/zip/data/`, not `/api/zip/home/data/`. Kudu's file APIs are already rooted at
+`/home`, so the longer form is a 404 that writes the error body into your backup file, which is
+why the `unzip -l` at the end is not optional.
+
+You should see `socialshare.db`, a `keys/` folder with at least one `key-*.xml`, and `uploads/`.
+If you take the zip with the app running you will also see `socialshare.db-wal` and
+`socialshare.db-shm`; keep all three or the backup is incomplete.
+
+Store the zip somewhere that is not this Azure subscription.
 
 ### Built in App Service backups
 
