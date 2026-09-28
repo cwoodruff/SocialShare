@@ -178,21 +178,59 @@ echo "AZURE_SUBSCRIPTION_ID $SUB"
 
 ### Add the federated credential
 
-The subject has to match the workflow exactly. The deploy job sets `environment: production`, so
-the subject ends in `environment:production`. Change `cwoodruff/SocialShare` to your repository.
+The subject has to match what GitHub actually presents, exactly. The deploy job sets
+`environment: production`, so it ends in `environment:production`. The prefix is the part worth
+checking, because there are two forms and guessing wrong fails at sign in.
+
+Ask GitHub which one it will send:
 
 ```bash
-az ad app federated-credential create --id $APP_ID --parameters '{
-  "name": "github-main",
-  "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:cwoodruff/SocialShare:environment:production",
-  "audiences": ["api://AzureADTokenExchange"]
-}'
+gh api repos/cwoodruff/SocialShare/actions/oidc/customization/sub
 ```
 
-If you also want pull request builds to be able to sign in, add a second credential with subject
-`repo:cwoodruff/SocialShare:pull_request`. The workflow as written does not need it, because only
-the deploy job signs in to Azure.
+`use_immutable_subject` is the answer. When it is `false` the prefix is the plain
+`repo:OWNER/REPO`. When it is `true` the response also hands you `sub_claim_prefix`, which has the
+owner's and the repository's permanent numeric IDs appended, and that is what the token carries:
+
+```
+repo:cwoodruff@68394/SocialShare@1389225307
+```
+
+Those IDs never change, so the credential keeps working across a rename. That is the point of the
+immutable form: a subject naming only `cwoodruff/SocialShare` would also match a *different*
+repository that later took the same name.
+
+Use the prefix the API gave you:
+
+```bash
+PREFIX=$(gh api repos/cwoodruff/SocialShare/actions/oidc/customization/sub \
+  --jq 'if .use_immutable_subject then .sub_claim_prefix else "repo:cwoodruff/SocialShare" end')
+
+az ad app federated-credential create --id $APP_ID --parameters "{
+  \"name\": \"github-main\",
+  \"issuer\": \"https://token.actions.githubusercontent.com\",
+  \"subject\": \"${PREFIX}:environment:production\",
+  \"audiences\": [\"api://AzureADTokenExchange\"]
+}"
+```
+
+The braces around `${PREFIX}` are load bearing. In zsh, which is the default shell on macOS,
+`$PREFIX:e` is a modifier rather than the variable followed by a colon, so the unbraced form
+quietly registers a subject of `nvironment:production` and every deploy then fails to sign in.
+
+If the deploy fails with `AADSTS700213: No matching federated identity record found`, the error
+quotes the subject it presented. Compare it to what you registered, and fix the credential rather
+than the workflow:
+
+```bash
+az ad app federated-credential list --id $APP_ID --query '[].{name:name,subject:subject}' -o json
+az ad app federated-credential update --id $APP_ID --federated-credential-id github-main \
+  --parameters '{ ...same shape, corrected subject... }'
+```
+
+If you also want pull request builds to be able to sign in, add a second credential ending in
+`:pull_request` instead of `:environment:production`, with the same prefix. The workflow as written
+does not need it, because only the deploy job signs in to Azure.
 
 ### Grant it the right to deploy
 

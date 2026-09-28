@@ -31,32 +31,64 @@ Open the door, walk through it, close it behind you.
 RG=socialshare-rg
 APP=socialshare-woody
 
-# 1. Open sign ups. The app restarts, which takes a few seconds.
+# 1. Turn on application logging. It ships Off, and with Email:Provider at Log the
+#    confirmation link goes to the application log, so without this there is nothing
+#    to find in step 3 and the account is stuck unconfirmed.
+az webapp log config --name $APP --resource-group $RG \
+  --application-logging filesystem --level information
+
+# 2. Open sign ups. The app restarts, which takes a minute or two, not a few seconds.
 az webapp config appsettings set --name $APP --resource-group $RG --settings \
   App__RegistrationEnabled=true
 
-# 2. Go to https://$APP.azurewebsites.net/register and create your account.
+# 3. Go to https://$APP.azurewebsites.net/register and create your account. Use the same
+#    address you are about to put in App__AdminEmails__0 or you will not get the Admin role.
 
-# 3. Find the confirmation link. With Email:Provider left at Log it is written to the
-#    application log rather than sent, so tail the log and look for "Confirm your SocialShare
-#    account". Open the link, then sign in.
+# 4. Find the confirmation link. Start this BEFORE submitting the form in step 3 if you can,
+#    because tailing shows new lines only.
 az webapp log tail --name $APP --resource-group $RG
 
-# 4. Close sign ups again.
+# 5. Close sign ups again.
 az webapp config appsettings set --name $APP --resource-group $RG --settings \
   App__RegistrationEnabled=false
 
-# 5. Make yourself an admin, if you have not already.
+# 6. Make yourself an admin, if you have not already.
 az webapp config appsettings set --name $APP --resource-group $RG --settings \
   App__AdminEmails__0="you@example.com"
 ```
+
+If you missed the tail, the link is still on disk, but not where you would guess. It is not in
+`LogFiles/*_docker.log`, which only carries container lifecycle lines. It is in the container
+stream, under `LogFiles/StartupLogs/.sources/`. There is no `az` command that greps a running
+Linux app, so go through Kudu:
+
+```bash
+TOKEN=$(az account get-access-token --resource https://management.azure.com \
+  --query accessToken -o tsv)
+
+curl -s -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -X POST "https://$APP.scm.azurewebsites.net/api/command" \
+  -d '{"command":"grep -rh confirm-email /home/LogFiles/","dir":"/home"}'
+```
+
+The links come back in the JSON `Output` field, newest last. `ExitCode` is 2 even on success,
+because `grep -r` trips over directories it cannot read on the way; look at `Output`, not the
+code. The token in the URL is Base64Url, so it survives a copy and paste unchanged.
+
+Do not reach for `az webapp ssh --command`: there is no such argument. `az webapp log download`
+is documented as unreliable on Linux.
+
+The Admin role is applied at startup to any `App__AdminEmails__0` address that already has an
+account, so the order matters: create the account first, then set the setting, and the restart it
+causes does the rest. Setting it before the account exists matches nothing and silently does
+nothing.
 
 Do the same thing again, briefly, each time you want to let somebody else in. There is no invite
 system. That is a deliberate omission rather than an oversight: an invite flow is real work and
 this has one user.
 
-If you configure a real email provider, steps 2 and 3 collapse into "register and click the link
-in your inbox" and you never touch the log. See [email-setup.md](email-setup.md).
+If you configure a real email provider, steps 1 and 4 disappear and step 3 becomes "register and
+click the link in your inbox". See [email-setup.md](email-setup.md).
 
 ### If you get locked out
 
@@ -74,27 +106,42 @@ You confirmed nothing, registration is closed, and you cannot sign in. Two ways 
 
 ### Manual, and good enough
 
+Kudu streams `/home/data` as a zip, which is the whole of the state: the database, the uploads
+and the Data Protection key ring. Stop the app first.
+
 ```bash
 RG=socialshare-rg
 APP=socialshare-woody
 STAMP=$(date +%Y%m%d-%H%M%S)
 
-# Put the app into a quiet state first. SQLite will happily be copied mid write, and a
-# mid write copy is how you get a backup that looks fine and restores broken.
+# Stop first. SQLite will happily be copied mid write, and a mid write copy is how you get a
+# backup that looks fine and restores broken. Stopping also checkpoints the write ahead log
+# into the .db, so what you get is one consistent file rather than a .db plus a -wal you have
+# to remember to keep together.
 az webapp stop --name $APP --resource-group $RG
 
-az webapp deploy --name $APP --resource-group $RG --type zip --src-path /dev/null 2>/dev/null || true
+TOKEN=$(az account get-access-token --resource https://management.azure.com \
+  --query accessToken -o tsv)
 
-# Pull the whole /home share down.
-az webapp config backup list --resource-group $RG --webapp-name $APP
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://$APP.scm.azurewebsites.net/api/zip/data/" \
+  -o "socialshare-$STAMP.zip"
 
 az webapp start --name $APP --resource-group $RG
+
+# Prove it before you trust it. An empty or truncated download still exits 0.
+unzip -l "socialshare-$STAMP.zip"
 ```
 
-In practice the simplest reliable route is the Kudu console. Browse to
-`https://YOUR-APP.scm.azurewebsites.net/api/zip/home/data/` and it streams the whole `data`
-folder as a zip. Do that with the site stopped, or after the daily quiet period, and store the
-zip somewhere that is not Azure.
+The path is `/api/zip/data/`, not `/api/zip/home/data/`. Kudu's file APIs are already rooted at
+`/home`, so the longer form is a 404 that writes the error body into your backup file, which is
+why the `unzip -l` at the end is not optional.
+
+You should see `socialshare.db`, a `keys/` folder with at least one `key-*.xml`, and `uploads/`.
+If you take the zip with the app running you will also see `socialshare.db-wal` and
+`socialshare.db-shm`; keep all three or the backup is incomplete.
+
+Store the zip somewhere that is not this Azure subscription.
 
 ### Built in App Service backups
 
