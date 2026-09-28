@@ -31,32 +31,64 @@ Open the door, walk through it, close it behind you.
 RG=socialshare-rg
 APP=socialshare-woody
 
-# 1. Open sign ups. The app restarts, which takes a few seconds.
+# 1. Turn on application logging. It ships Off, and with Email:Provider at Log the
+#    confirmation link goes to the application log, so without this there is nothing
+#    to find in step 3 and the account is stuck unconfirmed.
+az webapp log config --name $APP --resource-group $RG \
+  --application-logging filesystem --level information
+
+# 2. Open sign ups. The app restarts, which takes a minute or two, not a few seconds.
 az webapp config appsettings set --name $APP --resource-group $RG --settings \
   App__RegistrationEnabled=true
 
-# 2. Go to https://$APP.azurewebsites.net/register and create your account.
+# 3. Go to https://$APP.azurewebsites.net/register and create your account. Use the same
+#    address you are about to put in App__AdminEmails__0 or you will not get the Admin role.
 
-# 3. Find the confirmation link. With Email:Provider left at Log it is written to the
-#    application log rather than sent, so tail the log and look for "Confirm your SocialShare
-#    account". Open the link, then sign in.
+# 4. Find the confirmation link. Start this BEFORE submitting the form in step 3 if you can,
+#    because tailing shows new lines only.
 az webapp log tail --name $APP --resource-group $RG
 
-# 4. Close sign ups again.
+# 5. Close sign ups again.
 az webapp config appsettings set --name $APP --resource-group $RG --settings \
   App__RegistrationEnabled=false
 
-# 5. Make yourself an admin, if you have not already.
+# 6. Make yourself an admin, if you have not already.
 az webapp config appsettings set --name $APP --resource-group $RG --settings \
   App__AdminEmails__0="you@example.com"
 ```
+
+If you missed the tail, the link is still on disk, but not where you would guess. It is not in
+`LogFiles/*_docker.log`, which only carries container lifecycle lines. It is in the container
+stream, under `LogFiles/StartupLogs/.sources/`. There is no `az` command that greps a running
+Linux app, so go through Kudu:
+
+```bash
+TOKEN=$(az account get-access-token --resource https://management.azure.com \
+  --query accessToken -o tsv)
+
+curl -s -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -X POST "https://$APP.scm.azurewebsites.net/api/command" \
+  -d '{"command":"grep -rh confirm-email /home/LogFiles/","dir":"/home"}'
+```
+
+The links come back in the JSON `Output` field, newest last. `ExitCode` is 2 even on success,
+because `grep -r` trips over directories it cannot read on the way; look at `Output`, not the
+code. The token in the URL is Base64Url, so it survives a copy and paste unchanged.
+
+Do not reach for `az webapp ssh --command`: there is no such argument. `az webapp log download`
+is documented as unreliable on Linux.
+
+The Admin role is applied at startup to any `App__AdminEmails__0` address that already has an
+account, so the order matters: create the account first, then set the setting, and the restart it
+causes does the rest. Setting it before the account exists matches nothing and silently does
+nothing.
 
 Do the same thing again, briefly, each time you want to let somebody else in. There is no invite
 system. That is a deliberate omission rather than an oversight: an invite flow is real work and
 this has one user.
 
-If you configure a real email provider, steps 2 and 3 collapse into "register and click the link
-in your inbox" and you never touch the log. See [email-setup.md](email-setup.md).
+If you configure a real email provider, steps 1 and 4 disappear and step 3 becomes "register and
+click the link in your inbox". See [email-setup.md](email-setup.md).
 
 ### If you get locked out
 
